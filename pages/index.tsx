@@ -41,7 +41,6 @@ export async function getServerSideProps(context: Context) {
     //     page: entryRes,
     //   },
     // };
-    console.log('------------context.resolvedUrl',context.resolvedUrl);
     return {
       props: {
         entryUrl: context.resolvedUrl,
