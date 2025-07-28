@@ -1,54 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { onEntryChange } from '../contentstack-sdk';
-import { getPageRes } from '../helper';
-import Skeleton from 'react-loading-skeleton';
-import FormDocument from '../components/form-document';
+import React, { useState, useEffect } from "react";
+import FormDocument from "../components/form-document";
+import { getStackInfo, SafeStackInfo } from "../helper/get-stack-details";
 
-import { Props, Context } from "../typescript/pages";
+export default function Home() {
+  const [stackData, setStackData] = useState<SafeStackInfo | null>(null);
 
-
-export default function Home(props: Props) {
-  const { page, entryUrl } = props;
-  const [getEntry, setEntry] = useState(page);
-  
-  // async function fetchData() {
-  //   try {
-  //     const entryRes = await getPageRes(entryUrl);
-  //     if (!entryRes) throw new Error('Status code 404');
-  //     setEntry(entryRes);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   onEntryChange(() => fetchData());
-  // }, []);
+  useEffect(() => {
+    const run = async () => {
+      const data = await getStackInfo();
+      if (data) {
+        setStackData(data);
+      }
+    };
+    run();
+  }, []);
 
   return (
     <>
+      {stackData && (
+        <>
+          <h3>Stack Name: {stackData.stackname}</h3>
+          <h3>API Key: {stackData.apiKey}</h3>
+          <h3>Branch: {stackData.branch}</h3>
+          <h3>CMA TOKEN: {stackData.cmaToken}</h3>
+          <h3>Delivery Token: {stackData.deliveryToken}</h3>
+          <h3>Org UID: {stackData.org_uid}</h3>
+          <h3>Owner UID: {stackData.owner_uid}</h3>
+        </>
+      )}
+
       <FormDocument />
     </>
   );
-}
-
-export async function getServerSideProps(context: Context) {
-  try {
-    // const entryRes = await getPageRes(context.resolvedUrl);
-    // return {
-    //   props: {
-    //     entryUrl: context.resolvedUrl,
-    //     page: entryRes,
-    //   },
-    // };
-    console.log('------------context.resolvedUrl',context.resolvedUrl);
-    return {
-      props: {
-        entryUrl: context.resolvedUrl,
-        page: null,
-      },
-    };
-  } catch (error) {
-    return { notFound: true };
-  }
 }
