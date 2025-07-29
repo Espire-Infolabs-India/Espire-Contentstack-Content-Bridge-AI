@@ -54,6 +54,32 @@ async function readPDFContent(filePath) {
     return groupedFields;
 }
 
+function mergeArray(array1, array2){
+    const mergedArray = array1.map(item => {
+      // Create key using item.uid + parent_uid (+ parent_to_uid if exists)
+      const referenceKeyParts = [item.uid, item.parent_uid];
+      if (item.parent_to_uid) {
+        referenceKeyParts.push(item.parent_to_uid);
+      }
+      const referenceKey = referenceKeyParts.join('+');
+
+      // Find match in array2
+      const matched = array2.find(ref => ref.reference === referenceKey);
+
+      // If match found, merge value into item
+      if (matched) {
+        return {
+          ...item,
+          value: matched.value
+        };
+      }
+
+      return item;
+    });
+
+    return mergedArray;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -79,7 +105,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Provide either a PDF or a URL, not both" });
     }
 
-    try {
+    //try {
         const getContentTypeDetail = await getContentType(templateName);
         const schemas = getContentTypeDetail[0]?.schema;
 
@@ -143,6 +169,17 @@ export default async function handler(req, res) {
         let fileSchemaObjectsForChatBot = allSchemaObjects?.filter((field) => field?.data_type == 'file') || []; 
         let referenceObjects = allSchemaObjects?.filter((field) => field?.data_type == 'reference') || []; 
         
+        let textSchemaObjectsForChatBotFiltered = allSchemaObjects?.map((field) => ({
+          "display_name": field?.display_name,
+          "reference": (field?.parent_to_uid) ? field?.uid+'+'+field?.parent_uid+'+'+field?.parent_to_uid : field?.uid+'+'+field?.parent_uid,
+        }));
+
+
+
+
+        //console.log('textSchemaObjectsForChatBot____________________',textSchemaObjectsForChatBot);
+        //console.log('mergedArray____________________',mergedArray);
+
         let refrerenceFieldsList = [];
         let getReferenceFieldsAsync = (async(entryName, field) => {
             let getEntries = await fetch(`${process?.env?.BASE_URL}/api/get-content-entries/?content_name=${entryName}`);
@@ -153,17 +190,18 @@ export default async function handler(req, res) {
             }
         });
 
-       
-        if(referenceObjects && referenceObjects != undefined){
-          await Promise.all(referenceObjects?.map(async (field) => {
-            if(field?.reference_to && field?.data_type == "reference"){
-              let entryName = field?.reference_to[0];
-              let displayName = field?.display_name;
-              let actual_uid = field?.uid;
-              return await getReferenceFieldsAsync(entryName, field);
-            }
-          }));
-        }
+      //  if(referenceObjects && referenceObjects != undefined){
+      //     await Promise.all(referenceObjects?.map(async (field) => {
+      //       if(field?.reference_to && field?.data_type == "reference"){
+      //         let entryName = field?.reference_to[0];
+      //         let displayName = field?.display_name;
+      //         let actual_uid = field?.uid;
+      //         return await getReferenceFieldsAsync(entryName, field);
+      //       }
+      //     }));
+      //   }
+
+
 
         let truncatedContent = "";
         let PDFLink = "";
@@ -195,17 +233,17 @@ export default async function handler(req, res) {
           ${truncatedContent}
         `;
 
+        //textSchemaObjectsForChatBot
 
       let rawOutput = "";
-      console.log('________selectedModel',selectedModel);
       if(selectedModel == "custom_bot"){
         console.log('________in custom bot', PDFLink || url[0]);
-        var data = JSON.stringify({
+        var data = {
           "blob_url": (PDFLink == "") ? url[0] : PDFLink,
           "user_prompt": "Rewrite in a more engaging style, but maintain all important details.", // Remain Static as of now
           "brand_website_url": "https://www.oki.com/global/profile/brand/", // Remain Static as of now
-          "content_type": textSchemaObjectsForChatBot,
-        });
+          "content_type": JSON.stringify(textSchemaObjectsForChatBotFiltered, null, 2),//textSchemaObjectsForChatBot,
+        };
 
         var config = {
           method: 'post',
@@ -219,14 +257,16 @@ export default async function handler(req, res) {
 
         axios(config)
         .then(function (response) {
-          const parsedTemp = response?.data?.result?.data;
-          if(Array.isArray(parsedTemp)){
-            let finalFieldsArray = [...parsedTemp, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
+          const parsedTemp = response?.data?.result?.schema;
+          console.log('________parsedTemp',parsedTemp);
+          const mergedResponse = mergeArray(textSchemaObjectsForChatBot, parsedTemp);
+          console.log('________mergedResponse',mergedResponse);
+
+          if(Array.isArray(mergedResponse)){
+            let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
             const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
-            console.log('________in custom 725');
             res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
           }else{
-            console.log('________in custom 727');
             return res.status(500).json({
               error: "Unexpected server error",
             });
@@ -259,11 +299,11 @@ export default async function handler(req, res) {
           const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
           res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
       }
-    } catch (error) {
-      console.error("Handler error:", error);
-      return res.status(500).json({
-        error: error.message || "Unexpected server error",
-      });
-    }
+    // } catch (error) {
+    //   console.error("Handler error:", error);
+    //   return res.status(500).json({
+    //     error: error.message || "Unexpected server error",
+    //   });
+    // }
   });
 }
