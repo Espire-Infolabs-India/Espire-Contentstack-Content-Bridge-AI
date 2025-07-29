@@ -64,7 +64,7 @@ function mergeArray(array1, array2){
       const referenceKey = referenceKeyParts.join('+');
 
       // Find match in array2
-      const matched = array2.find(ref => ref.reference === referenceKey);
+      const matched = array2?.find(ref => ref.reference === referenceKey);
 
       // If match found, merge value into item
       if (matched) {

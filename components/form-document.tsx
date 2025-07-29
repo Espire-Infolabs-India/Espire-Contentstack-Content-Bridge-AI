@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
 import axios from "axios";
 import Settings from "./Settings";
+import AssetPicker, {
+  Asset,
+  AssetPickerProps,
+} from "./AssestPicker/AssetPicker";
 
 interface FormField {
   name: string;
@@ -14,11 +18,11 @@ export default function HomePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [fileSize, setFileSize] = useState<number>(0);
-  
+
   const [template, setTemplate] = useState<string>("author");
   const [url, setURL] = useState<string>("");
   const [errorAlert, setErrorAlert] = useState<string>("");
-  
+
   const [successMsg, setSuccessMsg] = useState<boolean>(false);
   const [result, setResult] = useState<any>(null);
   const [referenceFields, setReferenceFields] = useState<any>(null);
@@ -26,29 +30,36 @@ export default function HomePage() {
   const [contentTypeResult, setContentTypeResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [aiModel, setAIModel] = useState<string>("custom_bot");
-  
+
   const [firstPage, setFirstPage] = useState(true);
   const [secondPage, setSecondPage] = useState(false);
   const [uploadedDetails, setUploadedDetails] = useState(false);
   const [sucessPage, setSucessPage] = useState(false);
   const [finalResult, setFinalResult] = useState<any>(null);
-  const [baseUrl, setBaseUrl] = useState<string>('');
+  const [baseUrl, setBaseUrl] = useState<string>("");
   const [isModalOpen, setModalOpen] = useState(false);
 
+  const [assetMap, setAssetMap] = useState<{ [uid: string]: Asset }>({});
+
+  const getAssetFromPicker = (uid: string, asset: Asset): void => {
+    setAssetMap((prev) => ({ ...prev, [uid]: asset }));
+  };
 
   const setSecond: () => void = () => {
-    if(url == '' && fileName == ''){
+    if (url == "" && fileName == "") {
       //alert('Please choose file or enter any url for import.');
-      setErrorAlert('Please choose file or enter any url for import.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setErrorAlert("Please choose file or enter any url for import.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
         if (errorAlertEl) {
           errorAlertEl.style.display = "none";
         }
       }, 4000);
       return false;
-    }else{
+    } else {
       setSecondPage(true);
       setFirstPage(false);
       setSucessPage(false);
@@ -57,8 +68,8 @@ export default function HomePage() {
   };
 
   const setCancel: () => void = () => {
-    setURL('');
-    setFileName('');
+    setURL("");
+    setFileName("");
     setFileSize(0);
     setSelectedFile(null);
     setSecondPage(false);
@@ -68,12 +79,12 @@ export default function HomePage() {
     setLoading(false);
     setSuccessMsg(false);
     setResult(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const setSuccess: () => void = () => {
-    setURL('');
-    setFileName('');
+    setURL("");
+    setFileName("");
     setFileSize(0);
     setSelectedFile(null);
     setSecondPage(false);
@@ -91,7 +102,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    console.log('------------------------v6.1');
+    console.log("------------------------v6.1");
     setBaseUrl(window?.location?.origin);
     const fetchData = async () => {
       try {
@@ -113,9 +124,11 @@ export default function HomePage() {
     if (url.trim()) {
       //alert("You can't upload a file when a URL is provided.");
       setErrorAlert(`You can't upload a file when a URL is provided.`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
         if (errorAlertEl) {
           errorAlertEl.style.display = "none";
         }
@@ -129,9 +142,11 @@ export default function HomePage() {
     } else {
       //alert("Please upload a PDF file");
       setErrorAlert(`Please upload a PDF file.`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
         if (errorAlertEl) {
           errorAlertEl.style.display = "none";
         }
@@ -159,7 +174,6 @@ export default function HomePage() {
   //     let inputEl = document.getElementById(`${id}`) as HTMLInputElement;
   //     inputEl.value = data?.title;
 
-      
   //     let inputElMessage = document.getElementById(`${id}_message`) as HTMLInputElement;
   //     inputElMessage.innerHTML = "Regenerated Value has been updated."
   //     inputElMessage.classList.remove("hidden");
@@ -178,7 +192,6 @@ export default function HomePage() {
   //     let inputEl = document.getElementById(`${id}`) as HTMLInputElement;
   //     inputEl.value = data?.title;
 
-      
   //     let inputElMessage = document.getElementById(`${id}_message`) as HTMLInputElement;
   //     inputElMessage.innerHTML = "Regenerated Value has been updated."
   //     inputElMessage.classList.remove("hidden");
@@ -188,30 +201,33 @@ export default function HomePage() {
   // }
 
   const generateContent = async (e: React.SyntheticEvent) => {
-    if (!template){
+    if (!template) {
       setErrorAlert("Please select a content type.");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
         if (errorAlertEl) {
           errorAlertEl.style.display = "none";
         }
       }, 4000);
-      return
+      return;
     }
-
 
     if ((!selectedFile && !url.trim()) || (selectedFile && url.trim())) {
       //alert("Please provide either a PDF file or a URL, but not both.");
       setErrorAlert("Please provide either a PDF file or a URL, but not both.");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
         if (errorAlertEl) {
           errorAlertEl.style.display = "none";
         }
       }, 4000);
-      return
+      return;
     }
     setLoading(true);
 
@@ -232,7 +248,7 @@ export default function HomePage() {
           body: formData,
         }
       );
-      if(res?.status == 200){
+      if (res?.status == 200) {
         const data = await res.json();
         setSecondPage(false);
         setFirstPage(false);
@@ -240,31 +256,39 @@ export default function HomePage() {
         setResult(data?.summary);
         // setReferenceFields(data?.referenceFields);
         // setFileFieldList(data?.fileFieldList);
-      }else{
-          setCancel();
-          setFirstPage(true);
-          setErrorAlert("We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes.");
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          window.setTimeout(() => {
-            let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
-            if (errorAlertEl) {
-              errorAlertEl.style.display = "none";
-            }
-          }, 4000);
-        }
-    } catch (err) {
+      } else {
         setCancel();
         setFirstPage(true);
-        setErrorAlert("We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes.");
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setErrorAlert(
+          "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
+        );
+        window.scrollTo({ top: 0, behavior: "smooth" });
         window.setTimeout(() => {
-          let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+          let errorAlertEl = document.getElementById(
+            `errorAlert`
+          ) as HTMLInputElement;
           if (errorAlertEl) {
             errorAlertEl.style.display = "none";
           }
         }, 4000);
+      }
+    } catch (err) {
+      setCancel();
+      setFirstPage(true);
+      setErrorAlert(
+        "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.setTimeout(() => {
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
+        if (errorAlertEl) {
+          errorAlertEl.style.display = "none";
+        }
+      }, 4000);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -299,7 +323,7 @@ export default function HomePage() {
 
       const uploaded = response.data.asset;
       const inputEl = document.getElementById(`${inputId}_file`);
-      console.log('----------inputEl',inputEl);
+      console.log("----------inputEl", inputEl);
 
       if (inputEl && "value" in inputEl) {
         (inputEl as HTMLInputElement).value = uploaded.uid;
@@ -307,60 +331,76 @@ export default function HomePage() {
       }
       setLoading(false);
     } catch (err: any) {
-       setLoading(false);
+      setLoading(false);
       console.error("Upload failed:", err);
     }
   };
 
-  const handleSubmit = async (isPublish:boolean) => {
+  const handleSubmit = async (isPublish: boolean) => {
     try {
       const data: Record<string, any> = {};
       const componentData: Array<Record<string, any>> = [];
 
-      const textareas = document.querySelectorAll<HTMLTextAreaElement>(".form-textarea");
+      const textareas =
+        document.querySelectorAll<HTMLTextAreaElement>(".form-textarea");
       textareas.forEach((textarea) => {
-          let name = textarea.name;
-          let value = textarea.value.trim();
-          let parentUid = textarea.getAttribute("data-parent-uid") as string;
-          let parentToUid = textarea.getAttribute("data-parent-to-uid") as string;
-          let isRoot = textarea.getAttribute("data-is-root") as string;
+        let name = textarea.name;
+        let value = textarea.value.trim();
+        let parentUid = textarea.getAttribute("data-parent-uid") as string;
+        let parentToUid = textarea.getAttribute("data-parent-to-uid") as string;
+        let isRoot = textarea.getAttribute("data-is-root") as string;
 
-          if (!name || !value) return;
+        if (!name || !value) return;
 
-          if (isRoot == "true" && !parentToUid) {
-            if(name == "url"){
-              if(template == "_technical_solution"){
-                  data[name] = `/technical-offerings/${data['title']?.replaceAll(" ","-")?.replaceAll("_", "-")?.toLowerCase()}`;
-              }else if(template == "_case_study"){
-                  data[name] = `/case-study/${data['title']?.replaceAll(" ","-")?.replaceAll("_", "-")?.toLowerCase()}`;
-              }else if(template == "blog_post"){
-                  data[name] = `/blog/${data['title']?.replaceAll(" ","-")?.replaceAll("_", "-")?.toLowerCase()}`;
-              }else if(template == "page"){
-                  data[name] = `/${data['title']?.replaceAll(" ","-")?.replaceAll("_", "-")?.toLowerCase()}`;
-              }else{
-                  data[name] = `/${template}/${data['title']?.replaceAll(" ","-")?.replaceAll("_", "-")?.toLowerCase()}`;
-              }
-              
-            }else{
-              data[name] = value;
+        if (isRoot == "true" && !parentToUid) {
+          if (name == "url") {
+            if (template == "_technical_solution") {
+              data[name] = `/technical-offerings/${data["title"]
+                ?.replaceAll(" ", "-")
+                ?.replaceAll("_", "-")
+                ?.toLowerCase()}`;
+            } else if (template == "_case_study") {
+              data[name] = `/case-study/${data["title"]
+                ?.replaceAll(" ", "-")
+                ?.replaceAll("_", "-")
+                ?.toLowerCase()}`;
+            } else if (template == "blog_post") {
+              data[name] = `/blog/${data["title"]
+                ?.replaceAll(" ", "-")
+                ?.replaceAll("_", "-")
+                ?.toLowerCase()}`;
+            } else if (template == "page") {
+              data[name] = `/${data["title"]
+                ?.replaceAll(" ", "-")
+                ?.replaceAll("_", "-")
+                ?.toLowerCase()}`;
+            } else {
+              data[name] = `/${template}/${data["title"]
+                ?.replaceAll(" ", "-")
+                ?.replaceAll("_", "-")
+                ?.toLowerCase()}`;
             }
-          }else if(isRoot == "true" && parentToUid != ""){
-            if (!data[parentToUid]) {
-              data[parentToUid] = {};
-            }
-
-            data[parentToUid][name] = value;
-          }else if (parentUid) {
-            let existing = componentData.find((comp:any) => comp[parentUid]);
-            if (!existing) {
-              existing = { [parentUid]: {} };
-              componentData.push(existing);
-            }
-            existing[parentUid][name] = value;
+          } else {
+            data[name] = value;
           }
-        });
+        } else if (isRoot == "true" && parentToUid != "") {
+          if (!data[parentToUid]) {
+            data[parentToUid] = {};
+          }
 
-      const formDropdowns = document.querySelectorAll<HTMLTextAreaElement>('.form-dropdown');
+          data[parentToUid][name] = value;
+        } else if (parentUid) {
+          let existing = componentData.find((comp: any) => comp[parentUid]);
+          if (!existing) {
+            existing = { [parentUid]: {} };
+            componentData.push(existing);
+          }
+          existing[parentUid][name] = value;
+        }
+      });
+
+      const formDropdowns =
+        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown");
 
       formDropdowns.forEach((dropdown) => {
         let id = dropdown.id;
@@ -374,33 +414,33 @@ export default function HomePage() {
 
         const content = [{ uid: value, _content_type_uid: id }];
 
-        if (isRoot == "true" && !parentToUid) {  
+        if (isRoot == "true" && !parentToUid) {
           data[name] = content;
-        }else if(isRoot == "true" && parentToUid != ""){
-            let component = componentData.find(comp => comp[parentUid]);
+        } else if (isRoot == "true" && parentToUid != "") {
+          let component = componentData.find((comp) => comp[parentUid]);
 
-            if (!component) {
-              component = { [parentUid]: { [parentToUid]: {} } };
-              componentData.push(component);
-            }
+          if (!component) {
+            component = { [parentUid]: { [parentToUid]: {} } };
+            componentData.push(component);
+          }
 
-            // If parentToUid object doesn't exist inside parentUid, initialize it
-            if (!component[parentUid][parentToUid]) {
-              component[parentUid][parentToUid] = {};
-            }
-            component[parentUid][parentToUid][name] = content;
+          // If parentToUid object doesn't exist inside parentUid, initialize it
+          if (!component[parentUid][parentToUid]) {
+            component[parentUid][parentToUid] = {};
+          }
+          component[parentUid][parentToUid][name] = content;
         } else if (!isRoot && parentUid) {
-            let component = componentData.find(comp => comp[parentUid]);
-            if (!component) {
-              component = { [parentUid]: {} };
-              componentData.push(component);
-            }
-            component[parentUid][name] = content;
+          let component = componentData.find((comp) => comp[parentUid]);
+          if (!component) {
+            component = { [parentUid]: {} };
+            componentData.push(component);
+          }
+          component[parentUid][name] = content;
         }
       });
 
       data.page_components = componentData;
-      
+
       const myHeaders = new Headers();
       myHeaders.append("authorization", process.env.AUTHORIZATION as string);
       myHeaders.append("api_key", process.env.API_KEY as string);
@@ -420,12 +460,20 @@ export default function HomePage() {
       );
 
       const result = await response.json();
-      if(result?.error_code == 119){
-        result?.errors ? alert(JSON.stringify(result?.errors)) : alert("Please enter values in required fields.");
-        result?.errors ? setErrorAlert(JSON.stringify(result?.errors)) : setErrorAlert("We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes.");
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (result?.error_code == 119) {
+        result?.errors
+          ? alert(JSON.stringify(result?.errors))
+          : alert("Please enter values in required fields.");
+        result?.errors
+          ? setErrorAlert(JSON.stringify(result?.errors))
+          : setErrorAlert(
+              "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
+            );
+        window.scrollTo({ top: 0, behavior: "smooth" });
         window.setTimeout(() => {
-          let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+          let errorAlertEl = document.getElementById(
+            `errorAlert`
+          ) as HTMLInputElement;
           if (errorAlertEl) {
             errorAlertEl.style.display = "none";
           }
@@ -433,10 +481,9 @@ export default function HomePage() {
 
         setLoading(false);
         return false;
-        
-      }else{
+      } else {
         let entryId = result?.entry?.uid;
-        if(isPublish){
+        if (isPublish) {
           publishEntry(entryId);
         }
         setFinalResult(result);
@@ -445,19 +492,20 @@ export default function HomePage() {
         setResult(null);
         setLoading(false);
       }
-
     } catch (err) {
       console.error("Upload error:", err);
       //alert(`Error: ${err}`);
       setErrorAlert(`Error: ${err}`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(`errorAlert`) as HTMLInputElement;
+        let errorAlertEl = document.getElementById(
+          `errorAlert`
+        ) as HTMLInputElement;
         if (errorAlertEl) {
           errorAlertEl.style.display = "none";
         }
       }, 4000);
-      
+
       setLoading(false);
       setSuccessMsg(false);
       setResult(null);
@@ -467,30 +515,26 @@ export default function HomePage() {
   };
 
   // isPublish:boolean
-  const publishEntry = async (EntriyUid:string) => {
+  const publishEntry = async (EntriyUid: string) => {
     const myHeaders = new Headers();
     myHeaders.append("authorization", process.env.AUTHORIZATION as string);
     myHeaders.append("api_key", process.env.API_KEY as string);
     myHeaders.append("Content-Type", "application/json");
 
     const data = JSON.stringify({
-      "entries": [
+      entries: [
         {
-          "uid": EntriyUid,
-          "content_type": template,
-          "version": 1,
-          "locale": "en-us"
-        }
+          uid: EntriyUid,
+          content_type: template,
+          version: 1,
+          locale: "en-us",
+        },
       ],
-      "locales": [
-        "en-us"
-      ],
-      "environments": [
-        "dev"
-      ],
-      "publish_with_reference": true,
-      "skip_workflow_stage_check": true
-    }); 
+      locales: ["en-us"],
+      environments: ["dev"],
+      publish_with_reference: true,
+      skip_workflow_stage_check: true,
+    });
 
     const requestOptions: RequestInit = {
       method: "POST",
@@ -504,7 +548,7 @@ export default function HomePage() {
     );
 
     const publishingResult = await response.json();
-  }
+  };
 
   const renderResult = () => {
     if (!result) return null;
@@ -518,109 +562,130 @@ export default function HomePage() {
       }
     }
 
-
-
     return (
       <div className="genrate-content">
         <form encType="multipart/form-data" method="post">
-            {Object.entries(json as Record<string, any[]>).map(([parentUid, fields]) =>  ( //parentUid != '' &&
+          {Object.entries(json as Record<string, any[]>).map(
+            (
+              [parentUid, fields] //parentUid != '' &&
+            ) => (
               <div
                 key={parentUid}
                 className="mb-8 p-6 bg-white rounded-xl shadow-lg border border-gray-200"
               >
                 <h2 className="text-2xl font-semibold mb-6 text-purple-700 capitalize">
-                  {(parentUid == 'page_details') ? 'Common Details' : parentUid?.replace(/_/g, ' ')}
+                  {parentUid == "page_details"
+                    ? "Common Details"
+                    : parentUid?.replace(/_/g, " ")}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {fields.map((field: any) => {
-                        if (field?.data_type === 'text') {
-                          return (
-                            <div
-                                key={field?.uid ?? parentUid}
-                                className={`mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg ${
-                                  field?.is_root === true && field?.uid === "url" ? "hidden" : ""
-                                }`}
-                              >
-                              <div className="label-bar">
-                                <label htmlFor={field?.uid} className="mb-2 pl-2">
-                                  <strong>
-                                    {field.display_name} <span className="req">(Required)</span>
-                                  </strong>
-                                </label>
-                              </div>
-                              <textarea
-                                className="form-control form-textarea"
-                                data-parent-uid={parentUid}
-                                data-parent-to-uid={field?.parent_to_uid}
-                                data-is-root={field?.is_root}
-                                name={field?.uid}
-                                defaultValue={field?.value || ''}
-                              />
-                            </div>
-                          );
-                        } else if (field?.data_type === 'file') {
-                          return (
-                            <div
-                              key={field?.uid || parentUid}
-                              className="mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg"
-                            >
-                              <div className="label-bar">
-                                <label htmlFor={field?.uid} className="mb-2 pl-2">
-                                  <strong>
-                                    {field.display_name} <span className="req">(Required)</span>
-                                  </strong>
-                                </label>
-                              </div>
-                              <input
-                                type="file"
-                                className="form-control form-file-input"
-                                id={`${field?.uid}_${parentUid}_input`}
-                                name={field?.uid}
-                                onChange={handleFileChange}
-                              />
-                              <a className="text-purple-700">Choose file from assets</a>
-                              <input
-                                type="hidden"
-                                className="input_file_field form-textarea"
-                                name={field?.uid}
-                                id={`${field?.uid}_${parentUid}_input_file`}
-                                data-parent-uid={parentUid}
-                                data-parent-to-uid={field?.parent_to_uid}
-                                data-is-root={field?.is_root}
-                              />
-                            </div>
-                          );
-                        }else if (field?.data_type == 'reference') {
-                          return (
-                            <div
-                              key={field?.uid}
-                              className="mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg"
-                            >
-                              <label className="mb-2 pl-2"> {field?.display_name}</label>
-                              <select name={field?.uid} id={field?.reference_to[0]} data-parent-uid={parentUid} data-parent-to-uid={field?.parent_to_uid} className="form-select form-dropdown form-textarea1">
-                                <option value="">Choose...</option>
-                                {field?.values?.entries?.map((ele: any, ind: number) =>
-                                  ele?.title ? (
-                                    <option key={ind} value={ele?.uid}>
-                                      {ele?.title}
-                                    </option>
-                                  ) : null
-                                )}
-                              </select>
-                            </div>
-                          );
-                        } else {
-                          return null; // skip other types for now
-                        }
-                      })}
+                  {fields.map((field: any) => {
+                    if (field?.data_type === "text") {
+                      return (
+                        <div
+                          key={field?.uid ?? parentUid}
+                          className={`mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg ${
+                            field?.is_root === true && field?.uid === "url"
+                              ? "hidden"
+                              : ""
+                          }`}
+                        >
+                          <div className="label-bar">
+                            <label htmlFor={field?.uid} className="mb-2 pl-2">
+                              <strong>
+                                {field.display_name}{" "}
+                                <span className="req">(Required)</span>
+                              </strong>
+                            </label>
+                          </div>
+                          <textarea
+                            className="form-control form-textarea"
+                            data-parent-uid={parentUid}
+                            data-parent-to-uid={field?.parent_to_uid}
+                            data-is-root={field?.is_root}
+                            name={field?.uid}
+                            defaultValue={field?.value || ""}
+                          />
+                        </div>
+                      );
+                    } else if (field?.data_type === "file") {
+                      return (
+                        <div
+                          key={field?.uid || parentUid}
+                          className="mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg"
+                        >
+                          <div className="label-bar">
+                            <label htmlFor={field?.uid} className="mb-2 pl-2">
+                              <strong>
+                                {field.display_name}{" "}
+                                <span className="req">(Required)</span>
+                              </strong>
+                            </label>
+                          </div>
+                          <AssetPicker
+                            setSelectedAssestData={(asset) =>
+                              getAssetFromPicker(field?.uid, asset)
+                            }
+                          />
 
+                          {/* Hidden input to hold the selected asset URL */}
+                          <input
+                            type="hidden"
+                            className="input_file_field form-textarea"
+                            name={field?.uid}
+                            id={`${field?.uid}_${parentUid}_input_file`}
+                            data-parent-uid={parentUid}
+                            data-parent-to-uid={field?.parent_to_uid}
+                            data-is-root={field?.is_root}
+                            value={assetMap[field?.uid]?.uid}
+                          />
+                        </div>
+                      );
+                    } else if (field?.data_type == "reference") {
+                      return (
+                        <div
+                          key={field?.uid}
+                          className="mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg"
+                        >
+                          <label className="mb-2 pl-2">
+                            {" "}
+                            {field?.display_name}
+                          </label>
+                          <select
+                            name={field?.uid}
+                            id={field?.reference_to[0]}
+                            data-parent-uid={parentUid}
+                            data-parent-to-uid={field?.parent_to_uid}
+                            className="form-select form-dropdown form-textarea1"
+                          >
+                            <option value="">Choose...</option>
+                            {field?.values?.entries?.map(
+                              (ele: any, ind: number) =>
+                                ele?.title ? (
+                                  <option key={ind} value={ele?.uid}>
+                                    {ele?.title}
+                                  </option>
+                                ) : null
+                            )}
+                          </select>
+                        </div>
+                      );
+                    } else {
+                      return null; // skip other types for now
+                    }
+                  })}
                 </div>
               </div>
-            ))}
+            )
+          )}
 
           <div className="mb-4 flex justify-end bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg">
-            <button className="primary-button" onClick={setCancel}>Cancel</button>
-            <button type="button" className="primary-button"
+            <button className="primary-button" onClick={setCancel}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-button"
               onClick={() => handleSubmit(false)}
               disabled={loading}
             >
@@ -647,7 +712,7 @@ export default function HomePage() {
               Save
             </button>
             <button
-              type="button" 
+              type="button"
               className="primary-button active"
               onClick={() => handleSubmit(true)}
               disabled={loading}
@@ -685,131 +750,144 @@ export default function HomePage() {
           <div className="flex items-center justify-between py-3">
             <div className="flex justify-between w-full items-center">
               <h1 className="flex items-center">
-                  Content Bridge AI
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="ml-4"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M10 1.5625C5.34025 1.5625 1.5625 5.34025 1.5625 10C1.5625 14.6597 5.34025 18.4375 10 18.4375C14.6597 18.4375 18.4375 14.6597 18.4375 10C18.4375 5.34025 14.6597 1.5625 10 1.5625ZM0.4375 10C0.4375 4.7185 4.7185 0.4375 10 0.4375C15.2815 0.4375 19.5625 4.7185 19.5625 10C19.5625 15.2815 15.2815 19.5625 10 19.5625C4.7185 19.5625 0.4375 15.2815 0.4375 10Z"
-                      fill="#6E6B86"
-                    />
-                    <path
-                      d="M10 15.8125C10.2486 15.8125 10.4871 15.7137 10.6629 15.5379C10.8387 15.3621 10.9375 15.1236 10.9375 14.875C10.9375 14.6264 10.8387 14.3879 10.6629 14.2121C10.4871 14.0363 10.2486 13.9375 10 13.9375C9.75136 13.9375 9.5129 14.0363 9.33709 14.2121C9.16127 14.3879 9.0625 14.6264 9.0625 14.875C9.0625 15.1236 9.16127 15.3621 9.33709 15.5379C9.5129 15.7137 9.75136 15.8125 10 15.8125Z"
-                      fill="#6E6B86"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M8.7805 5.1805C9.19392 5.00933 9.63875 4.92712 10.086 4.93922C10.5333 4.95131 10.9731 5.05745 11.3766 5.25071C11.7802 5.44398 12.1385 5.72005 12.4284 6.06095C12.7182 6.40186 12.933 6.79997 13.0588 7.22937C13.1846 7.65878 13.2186 8.10986 13.1585 8.55326C13.0985 8.99667 12.9458 9.42247 12.7103 9.80295C12.4748 10.1834 12.1619 10.5101 11.7918 10.7616C11.4218 11.0132 11.0029 11.184 10.5625 11.263V11.5C10.5625 11.6492 10.5032 11.7923 10.3977 11.8977C10.2923 12.0032 10.1492 12.0625 10 12.0625C9.85082 12.0625 9.70774 12.0032 9.60225 11.8977C9.49676 11.7923 9.4375 11.6492 9.4375 11.5V10.75C9.4375 10.6008 9.49676 10.4577 9.60225 10.3523C9.70774 10.2468 9.85082 10.1875 10 10.1875C10.4079 10.1875 10.8067 10.0665 11.1459 9.83991C11.485 9.61328 11.7494 9.29116 11.9055 8.91428C12.0616 8.53741 12.1025 8.12271 12.0229 7.72263C11.9433 7.32254 11.7469 6.95504 11.4584 6.66659C11.17 6.37815 10.8025 6.18171 10.4024 6.10213C10.0023 6.02255 9.58759 6.06339 9.21072 6.2195C8.83384 6.3756 8.51172 6.63996 8.28509 6.97914C8.05846 7.31831 7.9375 7.71708 7.9375 8.125C7.9375 8.27418 7.87824 8.41726 7.77275 8.52275C7.66726 8.62824 7.52418 8.6875 7.375 8.6875C7.22582 8.6875 7.08274 8.62824 6.97725 8.52275C6.87176 8.41726 6.8125 8.27418 6.8125 8.125C6.8126 7.4946 6.99962 6.87838 7.34992 6.35427C7.70022 5.83016 8.19806 5.42168 8.7805 5.1805Z"
-                      fill="#6E6B86"
-                    />
-                  </svg>
+                Content Bridge AI
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="ml-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M10 1.5625C5.34025 1.5625 1.5625 5.34025 1.5625 10C1.5625 14.6597 5.34025 18.4375 10 18.4375C14.6597 18.4375 18.4375 14.6597 18.4375 10C18.4375 5.34025 14.6597 1.5625 10 1.5625ZM0.4375 10C0.4375 4.7185 4.7185 0.4375 10 0.4375C15.2815 0.4375 19.5625 4.7185 19.5625 10C19.5625 15.2815 15.2815 19.5625 10 19.5625C4.7185 19.5625 0.4375 15.2815 0.4375 10Z"
+                    fill="#6E6B86"
+                  />
+                  <path
+                    d="M10 15.8125C10.2486 15.8125 10.4871 15.7137 10.6629 15.5379C10.8387 15.3621 10.9375 15.1236 10.9375 14.875C10.9375 14.6264 10.8387 14.3879 10.6629 14.2121C10.4871 14.0363 10.2486 13.9375 10 13.9375C9.75136 13.9375 9.5129 14.0363 9.33709 14.2121C9.16127 14.3879 9.0625 14.6264 9.0625 14.875C9.0625 15.1236 9.16127 15.3621 9.33709 15.5379C9.5129 15.7137 9.75136 15.8125 10 15.8125Z"
+                    fill="#6E6B86"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M8.7805 5.1805C9.19392 5.00933 9.63875 4.92712 10.086 4.93922C10.5333 4.95131 10.9731 5.05745 11.3766 5.25071C11.7802 5.44398 12.1385 5.72005 12.4284 6.06095C12.7182 6.40186 12.933 6.79997 13.0588 7.22937C13.1846 7.65878 13.2186 8.10986 13.1585 8.55326C13.0985 8.99667 12.9458 9.42247 12.7103 9.80295C12.4748 10.1834 12.1619 10.5101 11.7918 10.7616C11.4218 11.0132 11.0029 11.184 10.5625 11.263V11.5C10.5625 11.6492 10.5032 11.7923 10.3977 11.8977C10.2923 12.0032 10.1492 12.0625 10 12.0625C9.85082 12.0625 9.70774 12.0032 9.60225 11.8977C9.49676 11.7923 9.4375 11.6492 9.4375 11.5V10.75C9.4375 10.6008 9.49676 10.4577 9.60225 10.3523C9.70774 10.2468 9.85082 10.1875 10 10.1875C10.4079 10.1875 10.8067 10.0665 11.1459 9.83991C11.485 9.61328 11.7494 9.29116 11.9055 8.91428C12.0616 8.53741 12.1025 8.12271 12.0229 7.72263C11.9433 7.32254 11.7469 6.95504 11.4584 6.66659C11.17 6.37815 10.8025 6.18171 10.4024 6.10213C10.0023 6.02255 9.58759 6.06339 9.21072 6.2195C8.83384 6.3756 8.51172 6.63996 8.28509 6.97914C8.05846 7.31831 7.9375 7.71708 7.9375 8.125C7.9375 8.27418 7.87824 8.41726 7.77275 8.52275C7.66726 8.62824 7.52418 8.6875 7.375 8.6875C7.22582 8.6875 7.08274 8.62824 6.97725 8.52275C6.87176 8.41726 6.8125 8.27418 6.8125 8.125C6.8126 7.4946 6.99962 6.87838 7.34992 6.35427C7.70022 5.83016 8.19806 5.42168 8.7805 5.1805Z"
+                    fill="#6E6B86"
+                  />
+                </svg>
               </h1>
-              <Settings model={aiModel} setAIModel={getAIModel} /> 
+              <Settings model={aiModel} setAIModel={getAIModel} />
             </div>
           </div>
         </div>
       </div>
 
       {errorAlert && (
-        <div id="errorAlert" className="alert alert-danger alert-dismissible fade show text-center" role="alert">
+        <div
+          id="errorAlert"
+          className="alert alert-danger alert-dismissible fade show text-center"
+          role="alert"
+        >
           {errorAlert}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
         </div>
       )}
-      
+
       {firstPage && (
         <div
-        className="text-center mb-5"
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-      >
-        <div className="bg-white border-[var(--border-color)] border-t-[1px] border-l-[1px] border-r-[1px] pb-4 rounded-t-lg">
-          <div className="topicon flex justify-center py-4">
-            <svg
-              width="68"
-              height="64"
-              viewBox="0 0 68 64"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M2.17021 38.5096C2.74579 38.5096 3.29779 38.7383 3.70478 39.1453C4.11178 39.5523 4.34043 40.1043 4.34043 40.6799V58.0416C4.34043 58.4409 4.66451 58.765 5.06383 58.765H62.9362C63.128 58.765 63.312 58.6887 63.4477 58.5531C63.5834 58.4174 63.6596 58.2334 63.6596 58.0416V40.6799C63.6596 40.1043 63.8882 39.5523 64.2952 39.1453C64.7022 38.7383 65.2542 38.5096 65.8298 38.5096C66.4054 38.5096 66.9574 38.7383 67.3644 39.1453C67.7714 39.5523 68 40.1043 68 40.6799V58.0416C68 59.3846 67.4665 60.6726 66.5168 61.6222C65.5672 62.5719 64.2792 63.1054 62.9362 63.1054H5.06383C3.72082 63.1054 2.43281 62.5719 1.48316 61.6222C0.533508 60.6726 0 59.3846 0 58.0416V40.6799C0 40.1043 0.228646 39.5523 0.63564 39.1453C1.04263 38.7383 1.59464 38.5096 2.17021 38.5096Z"
-                fill="#101010"
-                fillOpacity="0.3"
-              />
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M18.6551 15.3405L32.4664 1.52922C32.8733 1.12281 33.4249 0.894531 34 0.894531C34.5751 0.894531 35.1267 1.12281 35.5336 1.52922L49.3448 15.3405C49.7282 15.7519 49.9369 16.296 49.927 16.8582C49.9171 17.4205 49.6893 17.9569 49.2917 18.3545C48.8941 18.7521 48.3576 18.9799 47.7954 18.9898C47.2332 18.9997 46.689 18.791 46.2776 18.4077L36.1702 8.30317V52.2543C36.1702 52.8299 35.9416 53.3819 35.5346 53.7889C35.1276 54.1959 34.5756 54.4245 34 54.4245C33.4244 54.4245 32.8724 54.1959 32.4654 53.7889C32.0584 53.3819 31.8298 52.8299 31.8298 52.2543V8.30028L21.7253 18.4106C21.5266 18.6238 21.287 18.7948 21.0208 18.9134C20.7546 19.032 20.4672 19.0958 20.1758 19.101C19.8844 19.1061 19.595 19.0525 19.3247 18.9434C19.0545 18.8342 18.809 18.6717 18.603 18.4657C18.3969 18.2596 18.2344 18.0141 18.1253 17.7439C18.0161 17.4737 17.9625 17.1842 17.9676 16.8928C17.9728 16.6014 18.0366 16.314 18.1552 16.0478C18.2738 15.7816 18.4448 15.542 18.658 15.3433L18.6551 15.3405Z"
-                fill="#101010"
-                fillOpacity="0.3"
-              />
-            </svg>
-          </div>
-
-          <div className="flex justify-center flex-col md:flex-row py-2">
-            <div className="drag-box w-1/2 text-right pr-6">
-              Drag & drop or
-              <mark className="text-[var(--blue-color)] bg-transparent">
-                <button
-                  className="bg-transparent"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!!url.trim()}
-                >
-                  Choose File
-                </button>
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  style={{ display: "none" }}
-                  ref={fileInputRef}
-                  onChange={(e) =>
-                    e.target.files?.[0] && handleFileSelect(e.target.files[0])
-                  }
+          className="text-center mb-5"
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          <div className="bg-white border-[var(--border-color)] border-t-[1px] border-l-[1px] border-r-[1px] pb-4 rounded-t-lg">
+            <div className="topicon flex justify-center py-4">
+              <svg
+                width="68"
+                height="64"
+                viewBox="0 0 68 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M2.17021 38.5096C2.74579 38.5096 3.29779 38.7383 3.70478 39.1453C4.11178 39.5523 4.34043 40.1043 4.34043 40.6799V58.0416C4.34043 58.4409 4.66451 58.765 5.06383 58.765H62.9362C63.128 58.765 63.312 58.6887 63.4477 58.5531C63.5834 58.4174 63.6596 58.2334 63.6596 58.0416V40.6799C63.6596 40.1043 63.8882 39.5523 64.2952 39.1453C64.7022 38.7383 65.2542 38.5096 65.8298 38.5096C66.4054 38.5096 66.9574 38.7383 67.3644 39.1453C67.7714 39.5523 68 40.1043 68 40.6799V58.0416C68 59.3846 67.4665 60.6726 66.5168 61.6222C65.5672 62.5719 64.2792 63.1054 62.9362 63.1054H5.06383C3.72082 63.1054 2.43281 62.5719 1.48316 61.6222C0.533508 60.6726 0 59.3846 0 58.0416V40.6799C0 40.1043 0.228646 39.5523 0.63564 39.1453C1.04263 38.7383 1.59464 38.5096 2.17021 38.5096Z"
+                  fill="#101010"
+                  fillOpacity="0.3"
                 />
-                {selectedFile && (
-                  <p className="mt-2 text-muted hidden">
-                    Selected file: {selectedFile.name}
-                  </p>
-                )}
-              </mark>{" "}
-              to upload <br />
-              <span>Supported formats: PDF, DOCX, TXT</span>
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M18.6551 15.3405L32.4664 1.52922C32.8733 1.12281 33.4249 0.894531 34 0.894531C34.5751 0.894531 35.1267 1.12281 35.5336 1.52922L49.3448 15.3405C49.7282 15.7519 49.9369 16.296 49.927 16.8582C49.9171 17.4205 49.6893 17.9569 49.2917 18.3545C48.8941 18.7521 48.3576 18.9799 47.7954 18.9898C47.2332 18.9997 46.689 18.791 46.2776 18.4077L36.1702 8.30317V52.2543C36.1702 52.8299 35.9416 53.3819 35.5346 53.7889C35.1276 54.1959 34.5756 54.4245 34 54.4245C33.4244 54.4245 32.8724 54.1959 32.4654 53.7889C32.0584 53.3819 31.8298 52.8299 31.8298 52.2543V8.30028L21.7253 18.4106C21.5266 18.6238 21.287 18.7948 21.0208 18.9134C20.7546 19.032 20.4672 19.0958 20.1758 19.101C19.8844 19.1061 19.595 19.0525 19.3247 18.9434C19.0545 18.8342 18.809 18.6717 18.603 18.4657C18.3969 18.2596 18.2344 18.0141 18.1253 17.7439C18.0161 17.4737 17.9625 17.1842 17.9676 16.8928C17.9728 16.6014 18.0366 16.314 18.1552 16.0478C18.2738 15.7816 18.4448 15.542 18.658 15.3433L18.6551 15.3405Z"
+                  fill="#101010"
+                  fillOpacity="0.3"
+                />
+              </svg>
             </div>
-            <div className="or-divider flex justify-center items-center flex-col">
-              <span>or</span>
-            </div>
-            <div className="import-box w-1/2 text-left pl-6">
-              <label htmlFor="url" className="form-label">
-                Import from URL
-              </label>
-              <input
-                type="url"
-                id="url"
-                className="form-control url-input"
-                placeholder="Paste URL here"
-                value={url}
-                disabled={!!selectedFile}
-                onChange={(e) => setURL(e.target.value)}
-              />
+
+            <div className="flex justify-center flex-col md:flex-row py-2">
+              <div className="drag-box w-1/2 text-right pr-6">
+                Drag & drop or
+                <mark className="text-[var(--blue-color)] bg-transparent">
+                  <button
+                    className="bg-transparent"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!!url.trim()}
+                  >
+                    Choose File
+                  </button>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    ref={fileInputRef}
+                    onChange={(e) =>
+                      e.target.files?.[0] && handleFileSelect(e.target.files[0])
+                    }
+                  />
+                  {selectedFile && (
+                    <p className="mt-2 text-muted hidden">
+                      Selected file: {selectedFile.name}
+                    </p>
+                  )}
+                </mark>{" "}
+                to upload <br />
+                <span>Supported formats: PDF, DOCX, TXT</span>
+              </div>
+              <div className="or-divider flex justify-center items-center flex-col">
+                <span>or</span>
+              </div>
+              <div className="import-box w-1/2 text-left pl-6">
+                <label htmlFor="url" className="form-label">
+                  Import from URL
+                </label>
+                <input
+                  type="url"
+                  id="url"
+                  className="form-control url-input"
+                  placeholder="Paste URL here"
+                  value={url}
+                  disabled={!!selectedFile}
+                  onChange={(e) => setURL(e.target.value)}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white flex justify-content-end border-b-[1px] border-t-[1px] border-l-[1px] border-r-[1px] p-4 rounded-b-lg">
-          <button className="primary-button" onClick={setCancel}>Cancel</button>
-          <button className="primary-button active" onClick={setSecond}>Import</button>
-        </div>
+          <div className="bg-white flex justify-content-end border-b-[1px] border-t-[1px] border-l-[1px] border-r-[1px] p-4 rounded-b-lg">
+            <button className="primary-button" onClick={setCancel}>
+              Cancel
+            </button>
+            <button className="primary-button active" onClick={setSecond}>
+              Import
+            </button>
+          </div>
         </div>
       )}
 
@@ -817,45 +895,60 @@ export default function HomePage() {
       {uploadedDetails && (
         <div className="bg-white border-[var(--border-color)] border-[1px] p-4 flex items-center justify-between mb-4 rounded-lg">
           <span className="w-1/2 flex items-center">
-              {fileName && (
-                  <>
-                    <svg
-                      width="100"
-                      height="100"
-                      viewBox="0 0 100 100"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M18.7651 65.2653C18.7651 64.7132 18.9845 64.1838 19.3748 63.7934C19.7652 63.403 20.2947 63.1837 20.8468 63.1837H25.7039C28.4643 63.1837 31.1117 64.2803 33.0636 66.2322C35.0155 68.1841 36.1121 70.8314 36.1121 73.5918C36.1121 76.3523 35.0155 78.9996 33.0636 80.9515C31.1117 82.9034 28.4643 84 25.7039 84H20.8468C20.2947 84 19.7652 83.7807 19.3748 83.3903C18.9845 82.9999 18.7651 82.4705 18.7651 81.9184V65.2653ZM22.9284 67.3469V79.8367H25.7039C27.3602 79.8367 28.9486 79.1788 30.1197 78.0076C31.2909 76.8365 31.9488 75.2481 31.9488 73.5918C31.9488 71.9356 31.2909 70.3472 30.1197 69.176C28.9486 68.0049 27.3602 67.3469 25.7039 67.3469H22.9284ZM50.6835 67.3469C47.7859 67.3469 45.1325 69.9698 45.1325 73.5918C45.1325 77.2139 47.7859 79.8367 50.6835 79.8367C53.5811 79.8367 56.2345 77.2139 56.2345 73.5918C56.2345 69.9698 53.5811 67.3469 50.6835 67.3469ZM40.9692 73.5918C40.9692 68.0186 45.1519 63.1837 50.6835 63.1837C56.2151 63.1837 60.3978 68.0186 60.3978 73.5918C60.3978 79.1651 56.2151 84 50.6835 84C45.1519 84 40.9692 79.1651 40.9692 73.5918ZM74.267 67.3469C71.3527 67.3525 68.7243 69.9559 68.7243 73.5918C68.7243 77.2278 71.3555 79.8312 74.267 79.8367C75.5493 79.8229 76.7816 79.3371 77.7281 78.474C77.9291 78.2852 78.1655 78.1383 78.4238 78.0417C78.682 77.945 78.9569 77.9007 79.2324 77.9112C79.5079 77.9217 79.7786 77.9868 80.0287 78.1028C80.2789 78.2188 80.5035 78.3833 80.6895 78.5868C80.8756 78.7903 81.0193 79.0287 81.1124 79.2882C81.2056 79.5477 81.2462 79.8232 81.232 80.0985C81.2178 80.3739 81.1491 80.6437 81.0297 80.8922C80.9104 81.1408 80.7429 81.3632 80.5369 81.5464C78.8296 83.1073 76.6052 83.9813 74.292 84H74.2753C68.7243 84 64.5611 79.1817 64.5611 73.5918C64.5611 68.002 68.7243 63.1837 74.2753 63.1837H74.292C76.6052 63.2024 78.8296 64.0763 80.5369 65.6372C80.7429 65.8205 80.9104 66.0429 81.0297 66.2914C81.1491 66.54 81.2178 66.8098 81.232 67.0851C81.2462 67.3605 81.2056 67.6359 81.1124 67.8955C81.0193 68.155 80.8756 68.3934 80.6895 68.5969C80.5035 68.8004 80.2789 68.9649 80.0287 69.0809C79.7786 69.1969 79.5079 69.262 79.2324 69.2725C78.9569 69.283 78.682 69.2386 78.4238 69.142C78.1655 69.0454 77.9291 68.8985 77.7281 68.7097C76.7817 67.8446 75.5492 67.3593 74.267 67.3469ZM25.01 20.1633C24.826 20.1633 24.6495 20.2364 24.5194 20.3665C24.3893 20.4966 24.3162 20.6731 24.3162 20.8571V51.3878C24.3162 51.9398 24.0968 52.4693 23.7065 52.8597C23.3161 53.2501 22.7866 53.4694 22.2345 53.4694C21.6824 53.4694 21.153 53.2501 20.7626 52.8597C20.3722 52.4693 20.1529 51.9398 20.1529 51.3878V20.8571C20.1529 19.5689 20.6646 18.3335 21.5755 17.4226C22.4864 16.5117 23.7218 16 25.01 16H58.3162C58.8681 16.0005 59.3972 16.2201 59.7872 16.6106L79.2158 36.0392C79.6071 36.4278 79.8264 36.9579 79.8264 37.5102V51.3878C79.8264 51.9398 79.6071 52.4693 79.2167 52.8597C78.8263 53.2501 78.2968 53.4694 77.7447 53.4694C77.1926 53.4694 76.6632 53.2501 76.2728 52.8597C75.8824 52.4693 75.6631 51.9398 75.6631 51.3878V38.3706L57.4558 20.1633H25.01Z"
-                      fill="#475161"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M58.3162 16C58.8681 16.0005 59.3972 16.2201 59.7872 16.6106C60.1776 17.001 60.3978 17.5295 60.3978 18.0816V35.4286H77.7447C78.2968 35.4286 78.8254 35.6488 79.2158 36.0392C79.6071 36.4278 79.8264 36.9579 79.8264 37.5102C79.8264 38.0623 79.6071 38.5918 79.2167 38.9821C78.8263 39.3725 78.2968 39.5918 77.7447 39.5918H58.3162C57.7641 39.5918 57.2346 39.3725 56.8442 38.9821C56.4538 38.5918 56.2345 38.0623 56.2345 37.5102V18.0816C56.2345 17.5295 56.4538 17.0001 56.8442 16.6097C57.2346 16.2193 57.7641 16 58.3162 16Z"
-                      fill="#475161"
-                    />
-                  </svg>
-                  <h3>{fileName}</h3>
-                </>
-              )}
+            {fileName && (
+              <>
+                <svg
+                  width="100"
+                  height="100"
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M18.7651 65.2653C18.7651 64.7132 18.9845 64.1838 19.3748 63.7934C19.7652 63.403 20.2947 63.1837 20.8468 63.1837H25.7039C28.4643 63.1837 31.1117 64.2803 33.0636 66.2322C35.0155 68.1841 36.1121 70.8314 36.1121 73.5918C36.1121 76.3523 35.0155 78.9996 33.0636 80.9515C31.1117 82.9034 28.4643 84 25.7039 84H20.8468C20.2947 84 19.7652 83.7807 19.3748 83.3903C18.9845 82.9999 18.7651 82.4705 18.7651 81.9184V65.2653ZM22.9284 67.3469V79.8367H25.7039C27.3602 79.8367 28.9486 79.1788 30.1197 78.0076C31.2909 76.8365 31.9488 75.2481 31.9488 73.5918C31.9488 71.9356 31.2909 70.3472 30.1197 69.176C28.9486 68.0049 27.3602 67.3469 25.7039 67.3469H22.9284ZM50.6835 67.3469C47.7859 67.3469 45.1325 69.9698 45.1325 73.5918C45.1325 77.2139 47.7859 79.8367 50.6835 79.8367C53.5811 79.8367 56.2345 77.2139 56.2345 73.5918C56.2345 69.9698 53.5811 67.3469 50.6835 67.3469ZM40.9692 73.5918C40.9692 68.0186 45.1519 63.1837 50.6835 63.1837C56.2151 63.1837 60.3978 68.0186 60.3978 73.5918C60.3978 79.1651 56.2151 84 50.6835 84C45.1519 84 40.9692 79.1651 40.9692 73.5918ZM74.267 67.3469C71.3527 67.3525 68.7243 69.9559 68.7243 73.5918C68.7243 77.2278 71.3555 79.8312 74.267 79.8367C75.5493 79.8229 76.7816 79.3371 77.7281 78.474C77.9291 78.2852 78.1655 78.1383 78.4238 78.0417C78.682 77.945 78.9569 77.9007 79.2324 77.9112C79.5079 77.9217 79.7786 77.9868 80.0287 78.1028C80.2789 78.2188 80.5035 78.3833 80.6895 78.5868C80.8756 78.7903 81.0193 79.0287 81.1124 79.2882C81.2056 79.5477 81.2462 79.8232 81.232 80.0985C81.2178 80.3739 81.1491 80.6437 81.0297 80.8922C80.9104 81.1408 80.7429 81.3632 80.5369 81.5464C78.8296 83.1073 76.6052 83.9813 74.292 84H74.2753C68.7243 84 64.5611 79.1817 64.5611 73.5918C64.5611 68.002 68.7243 63.1837 74.2753 63.1837H74.292C76.6052 63.2024 78.8296 64.0763 80.5369 65.6372C80.7429 65.8205 80.9104 66.0429 81.0297 66.2914C81.1491 66.54 81.2178 66.8098 81.232 67.0851C81.2462 67.3605 81.2056 67.6359 81.1124 67.8955C81.0193 68.155 80.8756 68.3934 80.6895 68.5969C80.5035 68.8004 80.2789 68.9649 80.0287 69.0809C79.7786 69.1969 79.5079 69.262 79.2324 69.2725C78.9569 69.283 78.682 69.2386 78.4238 69.142C78.1655 69.0454 77.9291 68.8985 77.7281 68.7097C76.7817 67.8446 75.5492 67.3593 74.267 67.3469ZM25.01 20.1633C24.826 20.1633 24.6495 20.2364 24.5194 20.3665C24.3893 20.4966 24.3162 20.6731 24.3162 20.8571V51.3878C24.3162 51.9398 24.0968 52.4693 23.7065 52.8597C23.3161 53.2501 22.7866 53.4694 22.2345 53.4694C21.6824 53.4694 21.153 53.2501 20.7626 52.8597C20.3722 52.4693 20.1529 51.9398 20.1529 51.3878V20.8571C20.1529 19.5689 20.6646 18.3335 21.5755 17.4226C22.4864 16.5117 23.7218 16 25.01 16H58.3162C58.8681 16.0005 59.3972 16.2201 59.7872 16.6106L79.2158 36.0392C79.6071 36.4278 79.8264 36.9579 79.8264 37.5102V51.3878C79.8264 51.9398 79.6071 52.4693 79.2167 52.8597C78.8263 53.2501 78.2968 53.4694 77.7447 53.4694C77.1926 53.4694 76.6632 53.2501 76.2728 52.8597C75.8824 52.4693 75.6631 51.9398 75.6631 51.3878V38.3706L57.4558 20.1633H25.01Z"
+                    fill="#475161"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M58.3162 16C58.8681 16.0005 59.3972 16.2201 59.7872 16.6106C60.1776 17.001 60.3978 17.5295 60.3978 18.0816V35.4286H77.7447C78.2968 35.4286 78.8254 35.6488 79.2158 36.0392C79.6071 36.4278 79.8264 36.9579 79.8264 37.5102C79.8264 38.0623 79.6071 38.5918 79.2167 38.9821C78.8263 39.3725 78.2968 39.5918 77.7447 39.5918H58.3162C57.7641 39.5918 57.2346 39.3725 56.8442 38.9821C56.4538 38.5918 56.2345 38.0623 56.2345 37.5102V18.0816C56.2345 17.5295 56.4538 17.0001 56.8442 16.6097C57.2346 16.2193 57.7641 16 58.3162 16Z"
+                    fill="#475161"
+                  />
+                </svg>
+                <h3>{fileName}</h3>
+              </>
+            )}
 
-              {url && (
-                <>
-                  <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M24.4681 23.8298C24.2988 23.8298 24.1364 23.897 24.0167 24.0167C23.897 24.1364 23.8298 24.2988 23.8298 24.4681V75.5319C23.8298 75.8843 24.1157 76.1702 24.4681 76.1702H75.5319C75.7012 76.1702 75.8636 76.103 75.9833 75.9833C76.103 75.8636 76.1702 75.7012 76.1702 75.5319V58.4255C76.1702 57.9177 76.372 57.4306 76.7311 57.0715C77.0902 56.7124 77.5772 56.5106 78.0851 56.5106C78.593 56.5106 79.08 56.7124 79.4391 57.0715C79.7983 57.4306 80 57.9177 80 58.4255V75.5319C80 76.7169 79.5293 77.8534 78.6913 78.6913C77.8534 79.5293 76.7169 80 75.5319 80H24.4681C23.2831 80 22.1466 79.5293 21.3087 78.6913C20.4707 77.8534 20 76.7169 20 75.5319V24.4681C20 22.0017 22.0017 20 24.4681 20H41.5745C42.0823 20 42.5694 20.2017 42.9285 20.5609C43.2876 20.92 43.4894 21.407 43.4894 21.9149C43.4894 22.4228 43.2876 22.9098 42.9285 23.2689C42.5694 23.628 42.0823 23.8298 41.5745 23.8298H24.4681ZM56.5106 21.9149C56.5106 21.407 56.7124 20.92 57.0715 20.5609C57.4306 20.2017 57.9177 20 58.4255 20H75.537C78.0136 20 80 22.0068 80 24.4681V28.9362H76.1702V24.4681C76.1702 24.1106 75.8843 23.8298 75.537 23.8298H58.4255C57.9177 23.8298 57.4306 23.628 57.0715 23.2689C56.7124 22.9098 56.5106 22.4228 56.5106 21.9149ZM76.1702 28.9362V41.5745C76.1702 42.0823 76.372 42.5694 76.7311 42.9285C77.0902 43.2876 77.5772 43.4894 78.0851 43.4894C78.593 43.4894 79.08 43.2876 79.4391 42.9285C79.7983 42.5694 80 42.0823 80 41.5745V28.9362H76.1702Z" fill="#475161"/>
-                    <path fillRule="evenodd" clipRule="evenodd" d="M76.8851 23.1149C77.2437 23.4739 77.4451 23.9606 77.4451 24.4681C77.4451 24.9755 77.2437 25.4622 76.8851 25.8213L43.6936 59.0128C43.5183 59.2009 43.3069 59.3518 43.072 59.4565C42.8371 59.5611 42.5836 59.6174 42.3264 59.6219C42.0693 59.6265 41.8139 59.5792 41.5755 59.4829C41.3371 59.3866 41.1205 59.2432 40.9386 59.0614C40.7568 58.8795 40.6134 58.6629 40.5171 58.4245C40.4208 58.1861 40.3735 57.9307 40.3781 57.6736C40.3826 57.4164 40.4389 57.1629 40.5435 56.928C40.6482 56.6931 40.7991 56.4817 40.9872 56.3064L74.1787 23.1149C74.5378 22.7563 75.0245 22.5549 75.5319 22.5549C76.0394 22.5549 76.5261 22.7563 76.8851 23.1149Z" fill="#475161"/>
-                  </svg>
-                  <h3>{url}</h3>
-                </>
-              )}
-           
+            {url && (
+              <>
+                <svg
+                  width="100"
+                  height="100"
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M24.4681 23.8298C24.2988 23.8298 24.1364 23.897 24.0167 24.0167C23.897 24.1364 23.8298 24.2988 23.8298 24.4681V75.5319C23.8298 75.8843 24.1157 76.1702 24.4681 76.1702H75.5319C75.7012 76.1702 75.8636 76.103 75.9833 75.9833C76.103 75.8636 76.1702 75.7012 76.1702 75.5319V58.4255C76.1702 57.9177 76.372 57.4306 76.7311 57.0715C77.0902 56.7124 77.5772 56.5106 78.0851 56.5106C78.593 56.5106 79.08 56.7124 79.4391 57.0715C79.7983 57.4306 80 57.9177 80 58.4255V75.5319C80 76.7169 79.5293 77.8534 78.6913 78.6913C77.8534 79.5293 76.7169 80 75.5319 80H24.4681C23.2831 80 22.1466 79.5293 21.3087 78.6913C20.4707 77.8534 20 76.7169 20 75.5319V24.4681C20 22.0017 22.0017 20 24.4681 20H41.5745C42.0823 20 42.5694 20.2017 42.9285 20.5609C43.2876 20.92 43.4894 21.407 43.4894 21.9149C43.4894 22.4228 43.2876 22.9098 42.9285 23.2689C42.5694 23.628 42.0823 23.8298 41.5745 23.8298H24.4681ZM56.5106 21.9149C56.5106 21.407 56.7124 20.92 57.0715 20.5609C57.4306 20.2017 57.9177 20 58.4255 20H75.537C78.0136 20 80 22.0068 80 24.4681V28.9362H76.1702V24.4681C76.1702 24.1106 75.8843 23.8298 75.537 23.8298H58.4255C57.9177 23.8298 57.4306 23.628 57.0715 23.2689C56.7124 22.9098 56.5106 22.4228 56.5106 21.9149ZM76.1702 28.9362V41.5745C76.1702 42.0823 76.372 42.5694 76.7311 42.9285C77.0902 43.2876 77.5772 43.4894 78.0851 43.4894C78.593 43.4894 79.08 43.2876 79.4391 42.9285C79.7983 42.5694 80 42.0823 80 41.5745V28.9362H76.1702Z"
+                    fill="#475161"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M76.8851 23.1149C77.2437 23.4739 77.4451 23.9606 77.4451 24.4681C77.4451 24.9755 77.2437 25.4622 76.8851 25.8213L43.6936 59.0128C43.5183 59.2009 43.3069 59.3518 43.072 59.4565C42.8371 59.5611 42.5836 59.6174 42.3264 59.6219C42.0693 59.6265 41.8139 59.5792 41.5755 59.4829C41.3371 59.3866 41.1205 59.2432 40.9386 59.0614C40.7568 58.8795 40.6134 58.6629 40.5171 58.4245C40.4208 58.1861 40.3735 57.9307 40.3781 57.6736C40.3826 57.4164 40.4389 57.1629 40.5435 56.928C40.6482 56.6931 40.7991 56.4817 40.9872 56.3064L74.1787 23.1149C74.5378 22.7563 75.0245 22.5549 75.5319 22.5549C76.0394 22.5549 76.5261 22.7563 76.8851 23.1149Z"
+                    fill="#475161"
+                  />
+                </svg>
+                <h3>{url}</h3>
+              </>
+            )}
           </span>
 
-          {(fileName && fileSize && ( 
+          {fileName && fileSize && (
             <span className="w-1/2 flex items-center justify-end">
               {fileSize} KB
               <svg
@@ -876,7 +969,7 @@ export default function HomePage() {
                 />
               </svg>
             </span>
-          ))}
+          )}
         </div>
       )}
 
@@ -910,16 +1003,19 @@ export default function HomePage() {
             </div>
           </div>
           <div className="bg-white flex justify-content-end border-b-[1px] border-t-[1px] border-l-[1px] border-r-[1px] p-4 rounded-b-lg">
-          <button className="primary-button" type="button" onClick={setCancel}>
-            Cancel
-          </button>
-          <button
-            className="bg-[var(--blue-color)] primary-button active flex space-x-4"
-            disabled={!template || (!selectedFile && !url.trim()) || loading}
-            onClick={generateContent}
-            type="button"
-          >
-            
+            <button
+              className="primary-button"
+              type="button"
+              onClick={setCancel}
+            >
+              Cancel
+            </button>
+            <button
+              className="bg-[var(--blue-color)] primary-button active flex space-x-4"
+              disabled={!template || (!selectedFile && !url.trim()) || loading}
+              onClick={generateContent}
+              type="button"
+            >
               <>
                 <svg
                   width="21"
@@ -937,26 +1033,32 @@ export default function HomePage() {
                 </svg>
                 Generate Content
               </>
-            
-          </button>
+            </button>
           </div>
         </div>
-       )}
+      )}
 
       {renderResult()}
 
       {sucessPage && (
         <div className="new-page">
           <div className="bg-white flex items-center space-x-4 border-[var(--border-color)] border-t-[1px] rounded-t-lg border-l-[1px] border-r-[1px] border-b-[1px] p-4">
-            <h2>
-              New Page - {finalResult?.entry?.title}
-            </h2>
-            <button className="primary-button" type="button" onClick={setCancel}>
-               Click Here To Import More
+            <h2>New Page - {finalResult?.entry?.title}</h2>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={setCancel}
+            >
+              Click Here To Import More
             </button>
           </div>
           <div className="bg-white p-4 border-[var(--border-color)] border-l-[1px] border-b-[1px] border-r-[1px] rounded-b-lg">
-            <a className="btn btn-primary" href="https://app.contentstack.com/#!/stack/blta0ff3cef332c7e34/entries?branch=main&page=1&page_size=30&popular_view=entries-only-base&query=%7B%22queryObject%22%3A%7B%22%24and%22%3A%5B%7B%22_variants%22%3A%7B%22%24in%22%3A%5B%22%24baseVariant%22%5D%7D%7D%5D%7D%2C%22show_loc%22%3Atrue%7D">Click Here To Check Entry</a>
+            <a
+              className="btn btn-primary"
+              href="https://app.contentstack.com/#!/stack/blta0ff3cef332c7e34/entries?branch=main&page=1&page_size=30&popular_view=entries-only-base&query=%7B%22queryObject%22%3A%7B%22%24and%22%3A%5B%7B%22_variants%22%3A%7B%22%24in%22%3A%5B%22%24baseVariant%22%5D%7D%7D%5D%7D%2C%22show_loc%22%3Atrue%7D"
+            >
+              Click Here To Check Entry
+            </a>
             {/* <p className="mb-4">Summary: {finalResult?.entry?.summary}</p> */}
           </div>
         </div>
