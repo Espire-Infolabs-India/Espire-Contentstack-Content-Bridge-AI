@@ -1,7 +1,3 @@
-
-import { Image } from "../typescript/action";
-
-
 type AdditionalParam = {
   title: string;
   title_h2: string;
@@ -14,47 +10,45 @@ type AdditionalParam = {
   html_code: string;
   body: string;
   date: string;
-  uid:string;
+  uid: string;
   related_post: [];
   copyright: string;
   announcement_text: string;
   label: {};
   url: string;
-}
+};
 
 type Post = {
   url: string;
   is_archived: boolean;
   body: string;
-  featured_image: Image;
   title: string;
   date: string;
   author: [Author];
   $: AdditionalParam;
-}
+};
 
 type Author = {
   title: string;
   $: AdditionalParam;
-}
+};
 
 type PageProps = {
   page: Page;
   posts: [];
-  archivePost: []; 
-  blogPost: BlogPosts;
-}
+  archivePost: [];
+};
 
 type Seo = {
-  enable_search_indexing: boolean
-}
+  enable_search_indexing: boolean;
+};
 
 type Blog = {
   url: string;
   body: string;
   title: string;
   $: AdditionalParam;
-}
+};
 
 export type Props = {
   page: Page;
@@ -62,46 +56,25 @@ export type Props = {
   Component: any;
 
   pageProps: PageProps;
+};
 
-}
-
-export type Page ={
+export type Page = {
   uid: string;
   locale: string;
   url: string;
   seo: Seo;
   title: string;
-}
+};
 
 export type Context = {
   resolvedUrl: string;
   setHeader: Function;
   write: Function;
   end: Function;
-}
+};
 
-export type Pages = [
-  page: Page
-]
+export type Pages = [page: Page];
 
-export type PostPage = [
-  post: Post
-]
+export type PostPage = [post: Post];
 
 export type PageUrl = string;
-
-export type BlogPosts = {
-  title: string;
-  date: string;
-  body: string;
-  author: [Author];
-  related_post: [Blog];
-  locale: string;
-  featured_image: Image;
-  is_archived: boolean;
-  seo: Seo;
-  uid:string;
-  url: string;
-  _owner: string;
-  $: AdditionalParam;
-}
