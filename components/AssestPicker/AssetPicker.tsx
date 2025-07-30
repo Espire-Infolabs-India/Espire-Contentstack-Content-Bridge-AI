@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import FolderTree from "./FolderTree";
 import { fetchAssets, fetchFolders } from "../../helper/AssestPickerAPI";
 import { Asset } from "./AssestPickerModel";
-import { CircleMinus } from 'lucide-react';
+import { CircleMinus } from "lucide-react";
 type Props = {
   setSelectedAssetData: (asset: Asset) => void;
 };
@@ -38,8 +38,10 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
             alt="Selected Asset"
             className="w-50 h-50 object-cover rounded"
           />
-          <button onClick={() => setSelectedAsset(null)}>   <CircleMinus /></button>
-
+          <button onClick={() => setSelectedAsset(null)}>
+            {" "}
+            <CircleMinus />
+          </button>
         </div>
       )}
 
@@ -47,12 +49,10 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
         <button
           className="text-blue-600 underline hover:text-blue-800"
           onClick={() => setShowModal(true)}
-          className="text-blue-600 underline"
           type="button"
         >
           Choose a file
         </button>
-
 
         <span className="text-gray-500">or</span>
 
@@ -63,9 +63,7 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
             setShowModal(true);
             setUploadMode(true);
           }}
-          className="text-blue-600 underline flex items-center"
         >
-
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-4 w-4 mr-1"
