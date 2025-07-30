@@ -1,42 +1,41 @@
-import App from 'next/app';
-import Head from 'next/head';
-import Router from 'next/router';
-import NProgress from 'nprogress';
-import Layout from '../components/layout';
-import { getHeaderRes, getFooterRes, getAllEntries } from '../helper';
+import App from "next/app";
+import Head from "next/head";
+import Router from "next/router";
+import NProgress from "nprogress";
+import Layout from "../components/layout";
 
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { createTheme } from '@mui/material/styles';
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import { createTheme } from "@mui/material/styles";
 
 // for tailwind css
-import '../src/app/globals.css';
+import "../src/app/globals.css";
 
-import 'nprogress/nprogress.css';
-import '../styles/third-party.css';
-import '../styles/style.css';
-import 'react-loading-skeleton/dist/skeleton.css';
-import '@contentstack/live-preview-utils/dist/main.css';
+import "nprogress/nprogress.css";
+import "../styles/third-party.css";
+import "../styles/style.css";
+import "react-loading-skeleton/dist/skeleton.css";
+import "@contentstack/live-preview-utils/dist/main.css";
 import { Props } from "../typescript/pages";
 
 // Create a theme
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: "#1976d2",
     },
     secondary: {
-      main: '#f50057',
+      main: "#f50057",
     },
   },
 });
 
-Router.events.on('routeChangeStart', () => NProgress.start());
-Router.events.on('routeChangeComplete', () => NProgress.done());
-Router.events.on('routeChangeError', () => NProgress.done());
+Router.events.on("routeChangeStart", () => NProgress.start());
+Router.events.on("routeChangeComplete", () => NProgress.done());
+Router.events.on("routeChangeError", () => NProgress.done());
 
 function MyApp(props: Props) {
-  const { Component, pageProps, header, footer, entries } = props;
-  const { page, posts, archivePost, blogPost } = pageProps;
+  const { Component, pageProps } = props;
+  const { page, posts, archivePost } = pageProps;
 
   const metaData = (seo: any) => {
     const metaArr = [];
@@ -45,8 +44,8 @@ function MyApp(props: Props) {
         metaArr.push(
           <meta
             name={
-              key.includes('meta_')
-                ? key.split('meta_')[1].toString()
+              key.includes("meta_")
+                ? key.split("meta_")[1].toString()
                 : key.toString()
             }
             content={seo[key].toString()}
@@ -62,31 +61,24 @@ function MyApp(props: Props) {
     <>
       <Head>
         <meta
-          name='application-name'
-          content='Contentstack-Nextjs-Starter-App'
+          name="application-name"
+          content="Contentstack-Nextjs-Starter-App"
         />
-        <meta charSet='utf-8' />
-        <meta httpEquiv='X-UA-Compatible' content='IE=edge' />
+        <meta charSet="utf-8" />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
-          name='viewport'
-          content='width=device-width,initial-scale=1,minimum-scale=1'
+          name="viewport"
+          content="width=device-width,initial-scale=1,minimum-scale=1"
         />
-        <meta name='theme-color' content='#317EFB' />
+        <meta name="theme-color" content="#317EFB" />
         <title>Contentstack</title>
         {page?.seo && page.seo.enable_search_indexing && metaData(page.seo)}
       </Head>
-      <Layout
-        header={header}
-        footer={footer}
-        page={page}
-        blogPost={blogPost}
-        blogList={blogList}
-        entries={entries}
-      >
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-              <Component {...pageProps} />
-          </ThemeProvider>    
+      <Layout page={page} blogList={blogList}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Component {...pageProps} />
+        </ThemeProvider>
       </Layout>
     </>
   );

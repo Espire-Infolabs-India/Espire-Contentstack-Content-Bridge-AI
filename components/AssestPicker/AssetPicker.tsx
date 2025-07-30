@@ -47,7 +47,6 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
         <button
           className="text-blue-600 underline hover:text-blue-800"
           onClick={() => setShowModal(true)}
-          className="text-blue-600 underline"
           type="button"
         >
           Choose a file
@@ -63,7 +62,6 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
             setShowModal(true);
             setUploadMode(true);
           }}
-          className="text-blue-600 underline flex items-center"
         >
 
           <svg

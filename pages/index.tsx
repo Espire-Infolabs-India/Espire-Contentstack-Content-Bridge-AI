@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { onEntryChange } from '../contentstack-sdk';
-import { getPageRes } from '../helper';
 import Skeleton from 'react-loading-skeleton';
 import FormDocument from '../components/form-document';
 
