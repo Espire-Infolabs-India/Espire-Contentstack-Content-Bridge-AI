@@ -17,7 +17,7 @@ export const fetchFolders = async () => {
 };
 
 export const createFolder = async (name: string) => {
-  return axios.post("/api/create-folder", { asset: { name } }, { headers });
+  return axios.post("/api/create-folder", { asset: { name : name } }, { headers });
 };
 
 export const uploadAsset = async (file: File, parent_uid: string) => {

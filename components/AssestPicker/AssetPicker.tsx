@@ -4,8 +4,7 @@ import React, { useEffect, useState } from "react";
 import FolderTree from "./FolderTree";
 import { fetchAssets, fetchFolders } from "../../helper/AssestPickerAPI";
 import { Asset } from "./AssestPickerModel";
-
-
+import { CircleMinus } from 'lucide-react';
 type Props = {
   setSelectedAssetData: (asset: Asset) => void;
 };
@@ -30,7 +29,6 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
     setShowModal(false);
     setUploadMode(false);
   };
-
   return (
     <div className="p-4">
       {selectedAsset && (
@@ -38,18 +36,24 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
           <img
             src={selectedAsset.url}
             alt="Selected Asset"
-            className="w-24 h-24 object-cover rounded"
+            className="w-50 h-50 object-cover rounded"
           />
-          <span className="text-lg font-medium">{selectedAsset.title}</span>
+          <button onClick={() => setSelectedAsset(null)}>   <CircleMinus /></button>
+
         </div>
       )}
 
       <div className="flex items-center space-x-2 text-sm mb-4">
-        <button onClick={() => setShowModal(true)} className="text-blue-600 underline">
+        <button
+          onClick={() => setShowModal(true)}
+          className="text-blue-600 underline"
+          type="button"
+        >
           Choose a file
         </button>
         <span className="text-gray-500">or</span>
         <button
+          type="button"
           onClick={() => {
             setShowModal(true);
             setUploadMode(true);
@@ -73,6 +77,7 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-3/4 h-full overflow-auto relative">
             <button
+              type="button"
               className="absolute top-2 right-2 text-red-500 font-bold text-xl"
               onClick={() => {
                 setShowModal(false);
@@ -88,6 +93,8 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
               data={uploadMode ? folders : assets}
               isUploadNew={uploadMode}
               onSelectAsset={handleSelect}
+              setSelectedAssetData={setSelectedAssetData}
+              setSelectedAsset={setSelectedAsset}
             />
           </div>
         </div>

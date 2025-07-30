@@ -42,10 +42,8 @@ export default function HomePage() {
   const getAssetFromPicker = (uid: string, asset: Asset): void => {
     setAssetMap((prev) => ({ ...prev, [uid]: asset }));
   };
-
   const setSecond: () => void = () => {
     if (url == "" && fileName == "") {
-      //alert('Please choose file or enter any url for import.');
       setErrorAlert("Please choose file or enter any url for import.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       window.setTimeout(() => {
@@ -621,7 +619,7 @@ export default function HomePage() {
                             </label>
                           </div>
                           <AssetPicker
-                            setSelectedAssetData={(asset : Asset) =>
+                            setSelectedAssetData={(asset: Asset) =>
                               getAssetFromPicker(field?.uid, asset)
                             }
                           />
@@ -635,7 +633,10 @@ export default function HomePage() {
                             data-parent-uid={parentUid}
                             data-parent-to-uid={field?.parent_to_uid}
                             data-is-root={field?.is_root}
-                            value={assetMap[field?.uid]?.uid}
+                            value={
+                              assetMap[field?.uid]?.uid ||
+                              assetMap[field?.uid]?.asset?.uid
+                            }
                           />
                         </div>
                       );

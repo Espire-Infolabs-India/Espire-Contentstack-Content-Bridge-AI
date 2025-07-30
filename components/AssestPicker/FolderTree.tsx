@@ -13,12 +13,20 @@ type Props = {
   data: Asset[];
   onSelectAsset: (asset: Asset) => void;
   isUploadNew?: boolean;
+  setSelectedAssetData: (asset: Asset) => void;
+  setSelectedAsset: (asset: Asset | null) => void;
 };
 
-const FolderTree = ({ data, onSelectAsset, isUploadNew }: Props) => {
+const FolderTree = ({
+  data,
+  onSelectAsset,
+  isUploadNew,
+  setSelectedAssetData,
+  setSelectedAsset,
+}: Props) => {
   const [currentParentUid, setCurrentParentUid] = useState<string | null>(null);
   const [currentItems, setCurrentItems] = useState<Asset[]>([]);
-  const [history, setHistory] = useState<string[]>([]);
+  const [history] = useState<string[]>([]);
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -36,8 +44,11 @@ const FolderTree = ({ data, onSelectAsset, isUploadNew }: Props) => {
       return;
     setUploading(true);
     lastUploadedFileRef.current = file.name;
-    await uploadAsset(file, currentParentUid);
-    await fetchAssets(); // Refresh logic can be adjusted here
+    const data = await uploadAsset(file, currentParentUid);
+    // await fetchAssets();
+    setSelectedAssetData(data);
+    setSelectedAsset(data?.asset);
+
     setUploading(false);
   };
 
@@ -66,10 +77,19 @@ const FolderTree = ({ data, onSelectAsset, isUploadNew }: Props) => {
                   className="border px-2 py-1 rounded text-sm w-full text-center"
                 />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => setIsAddingFolder(false)}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingFolder(false)}
+                  >
                     <X />
                   </button>
-                  <button onClick={() => createFolder(newFolderName)}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      createFolder(newFolderName);
+                      setIsAddingFolder(false);
+                    }}
+                  >
                     <Check />
                   </button>
                 </div>
@@ -82,6 +102,7 @@ const FolderTree = ({ data, onSelectAsset, isUploadNew }: Props) => {
                 <img
                   src="/icon/add-folder.png"
                   className="w-24 h-24 object-contain"
+                  alt="Add Folder"
                 />
                 <p className="truncate w-24 text-sm mt-2 text-center">
                   New Folder
@@ -100,6 +121,7 @@ const FolderTree = ({ data, onSelectAsset, isUploadNew }: Props) => {
               className="cursor-pointer border p-4 flex flex-col items-center shadow hover:shadow-lg"
             >
               <img
+                alt="Asset"
                 src={
                   item.is_dir
                     ? "/icon/open-folder.png"
