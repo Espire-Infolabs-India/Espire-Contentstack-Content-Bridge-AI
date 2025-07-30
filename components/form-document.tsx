@@ -3,10 +3,8 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
 import axios from "axios";
 import Settings from "./Settings";
-import AssetPicker, {
-  Asset,
-  AssetPickerProps,
-} from "./AssestPicker/AssetPicker";
+import AssetPicker from "./AssestPicker/AssetPicker";
+import { Asset } from "./AssestPicker/AssestPickerModel";
 
 interface FormField {
   name: string;
@@ -617,13 +615,13 @@ export default function HomePage() {
                           <div className="label-bar">
                             <label htmlFor={field?.uid} className="mb-2 pl-2">
                               <strong>
-                                {field.display_name}{" "}
+                                {field.display_name}
                                 <span className="req">(Required)</span>
                               </strong>
                             </label>
                           </div>
                           <AssetPicker
-                            setSelectedAssestData={(asset) =>
+                            setSelectedAssetData={(asset : Asset) =>
                               getAssetFromPicker(field?.uid, asset)
                             }
                           />
