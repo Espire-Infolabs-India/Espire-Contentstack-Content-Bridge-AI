@@ -1,92 +1,34 @@
+// components/AssetPicker.tsx
 "use client";
-
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import FolderTree from "./FolderTree";
-
-export interface Asset {
-  uid: string;
-  name?: string;
-  filename?: string;
-  is_dir: boolean;
-  parent_uid: string | null;
-  url?: string;
-  title?: string;
-  [key: string]: any;
-}
-
-interface Folder {
-  uid: string;
-  name: string;
-}
-
-export type AssetPickerProps = {
-  setSelectedAssestData: (asset: Asset) => void;
+import { fetchAssets, fetchFolders } from "../../helper/AssestPickerAPI";
+import { Asset } from "./AssestPickerModel";
+import { CircleMinus } from 'lucide-react';
+type Props = {
+  setSelectedAssetData: (asset: Asset) => void;
 };
 
-const AssetPicker = ({ setSelectedAssestData }: AssetPickerProps) => {
+const AssetPicker = ({ setSelectedAssetData }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [file, setFile] = useState<File | null>(null);
-  const [isUploadNew, setIsUploadNew] = useState<boolean | undefined>(false);
+  const [folders, setFolders] = useState<Asset[]>([]);
+  const [uploadMode, setUploadMode] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-
-  const fetchAssets = async () => {
-    const res = await axios.get("/api/fetch-assets", {
-      headers: {
-        api_key: process.env.API_KEY as string,
-        authorization: process.env.AUTHORIZATION as string,
-      },
-    });
-    setAssets(res.data.assets);
-  };
-
-  const fetchFolders = async () => {
-    const res = await axios.get("/api/fetch-folders", {
-      headers: {
-        api_key: process.env.API_KEY as string,
-        authorization: process.env.AUTHORIZATION as string,
-      },
-    });
-    const folders = res.data.assets.filter(
-      (folder: { name: string }) => folder?.name
-    );
-    setFolders(folders);
-  };
-
-  const uploadAsset = async (parent_uid: string) => {
-    console.log("Uploading asset to parent UID:", parent_uid);
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("asset[upload]", file);
-    formData.append("asset[title]", file.name);
-    formData.append("asset[parent_uid]", parent_uid);
-
-    const res1 = await fetch("https://api.contentstack.io/v3/assets", {
-      method: "POST",
-      headers: {
-        api_key: process.env.API_KEY as string,
-        authorization: process.env.AUTHORIZATION as string,
-      },
-      body: formData,
-    });
-
-    const data = await res1.json();
-    console.log("✅ Upload Successful", data);
-
-    fetchAssets();
-    setFile(null);
-    alert("Uploaded Successfully");
-  };
 
   useEffect(() => {
     if (showModal) {
-      fetchAssets();
-      fetchFolders();
+      fetchAssets().then(setAssets);
+      fetchFolders().then(setFolders);
     }
   }, [showModal]);
 
+  const handleSelect = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setSelectedAssetData(asset);
+    setShowModal(false);
+    setUploadMode(false);
+  };
   return (
     <div className="p-4">
       {selectedAsset && (
@@ -94,20 +36,23 @@ const AssetPicker = ({ setSelectedAssestData }: AssetPickerProps) => {
           <img
             src={selectedAsset.url}
             alt="Selected Asset"
-            className="w-24 h-24 object-cover rounded"
+            className="w-50 h-50 object-cover rounded"
           />
-          <span className="text-lg font-medium">{selectedAsset.title}</span>
+          <button onClick={() => setSelectedAsset(null)}>   <CircleMinus /></button>
+
         </div>
       )}
 
       <div className="flex items-center space-x-2 text-sm mb-4">
         <button
-          type="button"
           className="text-blue-600 underline hover:text-blue-800"
           onClick={() => setShowModal(true)}
+          className="text-blue-600 underline"
+          type="button"
         >
           Choose a file
         </button>
+
 
         <span className="text-gray-500">or</span>
 
@@ -116,9 +61,11 @@ const AssetPicker = ({ setSelectedAssestData }: AssetPickerProps) => {
           className="text-blue-600 underline hover:text-blue-800 flex items-center"
           onClick={() => {
             setShowModal(true);
-            setIsUploadNew(true);
+            setUploadMode(true);
           }}
+          className="text-blue-600 underline flex items-center"
         >
+
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-4 w-4 mr-1"
@@ -138,51 +85,30 @@ const AssetPicker = ({ setSelectedAssestData }: AssetPickerProps) => {
       </div>
 
       {showModal && (
-        <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg w-3/4 h-full overflow-auto  relative">
-              <button
-                type="button"
-                className="absolute top-2 right-2 text-red-500 font-bold text-xl"
-                onClick={() => {
-                  setShowModal(false);
-                  setIsUploadNew(false);
-                }}
-              >
-                &times;
-              </button>
-
-              {isUploadNew ? (
-                <>
-                  <h3 className="font-bold text-lg mb-4">Upload Assets</h3>
-                  <FolderTree
-                    data={folders as Asset[]}
-                    onSelectAsset={(asset: Asset) => {
-                      setSelectedAsset(asset);
-                      setSelectedAssestData(asset);
-                      setShowModal(false);
-                    }}
-                    isUploadNew={isUploadNew}
-                  />
-                </>
-              ) : (
-                <>
-                  <h3 className="font-bold text-lg mb-4">Select Assets</h3>
-
-                  <FolderTree
-                    data={assets}
-                    onSelectAsset={(asset: Asset) => {
-                      setSelectedAsset(asset);
-                      setSelectedAssestData(asset);
-                      setShowModal(false);
-                    }}
-                    isUploadNew={isUploadNew}
-                  />
-                </>
-              )}
-            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-3/4 h-full overflow-auto relative">
+            <button
+              type="button"
+              className="absolute top-2 right-2 text-red-500 font-bold text-xl"
+              onClick={() => {
+                setShowModal(false);
+                setUploadMode(false);
+              }}
+            >
+              &times;
+            </button>
+            <h3 className="font-bold text-lg mb-4">
+              {uploadMode ? "Upload Assets" : "Select Assets"}
+            </h3>
+            <FolderTree
+              data={uploadMode ? folders : assets}
+              isUploadNew={uploadMode}
+              onSelectAsset={handleSelect}
+              setSelectedAssetData={setSelectedAssetData}
+              setSelectedAsset={setSelectedAsset}
+            />
           </div>
-        </>
+        </div>
       )}
     </div>
   );

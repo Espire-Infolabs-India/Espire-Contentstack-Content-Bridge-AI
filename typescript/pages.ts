@@ -1,6 +1,6 @@
-import { Component } from "../typescript/component";
+
 import { Image } from "../typescript/action";
-import { Entry, HeaderProps ,FooterProps } from "./layout";
+
 
 type AdditionalParam = {
   title: string;
@@ -60,14 +60,12 @@ export type Props = {
   page: Page;
   entryUrl: string;
   Component: any;
-  entries: Entry;
+
   pageProps: PageProps;
-  header: HeaderProps;
-  footer: FooterProps;
+
 }
 
 export type Page ={
-  page_components: Component[];
   uid: string;
   locale: string;
   url: string;
