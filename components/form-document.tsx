@@ -435,6 +435,46 @@ export default function HomePage() {
         }
       });
 
+
+      const formDropdownsNormal = document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
+      formDropdownsNormal.forEach((dropdown) => {
+        let id = dropdown.id;
+        let name = dropdown.name;
+        let value = dropdown.value.trim();
+        let parentUid = dropdown.getAttribute("data-parent-uid") as string;
+        let parentToUid = dropdown.getAttribute("data-parent-to-uid") as string;
+        let isRoot = dropdown.getAttribute("data-is-root") as string;
+
+        if (!name || !value) return;
+        const content = value; //[{ uid: value, _content_type_uid: id }];
+
+        if (isRoot == "true" && !parentToUid) {
+          data[name] = content;
+        } else if (isRoot == "true" && parentToUid != "") {
+          let component = componentData.find((comp) => comp[parentUid]);
+
+          if (!component) {
+            component = { [parentUid]: { [parentToUid]: {} } };
+            componentData.push(component);
+          }
+
+          // If parentToUid object doesn't exist inside parentUid, initialize it
+          if (!component[parentUid][parentToUid]) {
+            component[parentUid][parentToUid] = {};
+          }
+          component[parentUid][parentToUid][name] = content;
+        } else if (!isRoot && parentUid) {
+          let component = componentData.find((comp) => comp[parentUid]);
+          if (!component) {
+            component = { [parentUid]: {} };
+            componentData.push(component);
+          }
+          component[parentUid][name] = content;
+        }
+      });
+
+
+
       data.page_components = componentData;
 
       const myHeaders = new Headers();
@@ -576,7 +616,35 @@ export default function HomePage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {fields.map((field: any) => {
-                    if (field?.data_type === "text") {
+                    if (field?.display_type == "radio") {
+                      return (
+                        <div
+                          key={field?.uid}
+                          className="mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg"
+                        >
+                          <label className="mb-2 pl-2">
+                            {" "}
+                            {field?.display_name}
+                          </label>
+                          <select
+                            name={field?.uid}
+                            id={field?.uid}
+                            data-parent-uid={parentUid}
+                            data-parent-to-uid={field?.parent_to_uid}
+                            className="form-select form-dropdown-normal form-textarea1"
+                          >
+                            <option value="">Choose...</option>
+                            {field?.enum?.choices?.map(
+                              (ele: any, ind: number) => (
+                                  <option key={ind} value={ele?.value}>
+                                    {ele?.value}
+                                  </option>
+                                )
+                            )}
+                          </select>
+                        </div>
+                      );
+                    }else if (field?.data_type === "text") {
                       return (
                         <div
                           key={field?.uid ?? parentUid}

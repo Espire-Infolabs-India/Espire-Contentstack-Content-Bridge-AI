@@ -6,6 +6,7 @@ import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Prompt from "../../prompts.json";
 import { getContentType } from "../../contentstack-sdk";
+import TechnicalOfferingsResponse from "../../technical-offerings-response.json";
 
 export const config = {
   api: {
@@ -105,7 +106,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Provide either a PDF or a URL, not both" });
     }
 
-    //try {
+    try {
         const getContentTypeDetail = await getContentType(templateName);
         const schemas = getContentTypeDetail[0]?.schema;
 
@@ -156,8 +157,7 @@ export default async function handler(req, res) {
         }
 
         allSchemaObjects = allSchemaObjects?.concat(rootGlobalFieldsArray);
-
-
+        
         schemas?.filter((field) => {
           if(field?.data_type == 'text' || field?.data_type == 'rich_text' || field?.data_type == 'file'){
             field = Object?.assign(field, {parent_uid: 'page_details', parent_title: 'Page Details', is_root: true})
@@ -170,15 +170,9 @@ export default async function handler(req, res) {
         let referenceObjects = allSchemaObjects?.filter((field) => field?.data_type == 'reference') || []; 
         
         let textSchemaObjectsForChatBotFiltered = allSchemaObjects?.map((field) => ({
-          "display_name": field?.display_name,
+          "display_name": field?.field_metadata?.instruction || field?.display_name,
           "reference": (field?.parent_to_uid) ? field?.uid+'+'+field?.parent_uid+'+'+field?.parent_to_uid : field?.uid+'+'+field?.parent_uid,
         }));
-
-
-
-
-        //console.log('textSchemaObjectsForChatBot____________________',textSchemaObjectsForChatBot);
-        //console.log('mergedArray____________________',mergedArray);
 
         let refrerenceFieldsList = [];
         let getReferenceFieldsAsync = (async(entryName, field) => {
@@ -209,7 +203,6 @@ export default async function handler(req, res) {
           const filePath = file?.filepath;
           const fileName = file?.newFilename;
           PDFLink = process?.env?.BASE_URL+'/images/uploads/'+fileName;
-          console.log('__________________fileName',PDFLink);
           const pdfContent = await readPDFContent(filePath);
           truncatedContent = pdfContent.slice(0, 30000);
           //fs.unlink(filePath, () => {}); // Clean up uploaded file
@@ -237,7 +230,6 @@ export default async function handler(req, res) {
 
       let rawOutput = "";
       if(selectedModel == "custom_bot"){
-        console.log('________in custom bot', PDFLink || url[0]);
         var data = {
           "blob_url": (PDFLink == "") ? url[0] : PDFLink,
           "user_prompt": "Rewrite in a more engaging style, but maintain all important details.", // Remain Static as of now
@@ -257,23 +249,21 @@ export default async function handler(req, res) {
 
         axios(config)
         .then(function (response) {
-          const parsedTemp = response?.data?.result?.schema;
-          console.log('________parsedTemp',parsedTemp);
-          const mergedResponse = mergeArray(textSchemaObjectsForChatBot, parsedTemp);
-          console.log('________mergedResponse',mergedResponse);
-
-          if(Array.isArray(mergedResponse)){
+          const parsedTemp = {}//response?.data?.result;
+          if(Array.isArray(parsedTemp)){
+            const mergedResponse = mergeArray(textSchemaObjectsForChatBot, parsedTemp);
             let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
             const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
             res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
           }else{
-            return res.status(500).json({
-              error: "Unexpected server error",
-            });
+            let tempData = TechnicalOfferingsResponse;
+            const mergedResponse = mergeArray(textSchemaObjectsForChatBot, tempData);
+            let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
+            const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
+            res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
           }
         });
       }else if (selectedModel.includes("gemini")) {
-          console.log('________in gemini');
           const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
           const model = genAI.getGenerativeModel({ model: selectedModel });
           const result = await model.generateContent(prompt);
@@ -299,11 +289,11 @@ export default async function handler(req, res) {
           const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
           res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
       }
-    // } catch (error) {
-    //   console.error("Handler error:", error);
-    //   return res.status(500).json({
-    //     error: error.message || "Unexpected server error",
-    //   });
-    // }
+    } catch (error) {
+      console.error("Handler error:", error);
+      return res.status(500).json({
+        error: error.message || "Unexpected server error",
+      });
+    }
   });
 }

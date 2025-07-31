@@ -1,0 +1,182 @@
+[
+    {
+        "display_name": "Write a short, compelling banner title that engages users and introduces the page content",
+        "reference": "banner_title+hero_banner",
+        "value": "Discover Our Innovative Solutions"
+    },
+    {
+        "display_name": "Provide a large, high-resolution image for the hero area. Ensure it's optimized for web and displays well on all devices\n",
+        "reference": "banner_image+hero_banner",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "Add supporting text for the hero banner. This should be concise, informative, and aligned with the main message",
+        "reference": "banner_description+hero_banner",
+        "value": "Explore cutting-edge technology designed to transform your business with efficiency and precision."
+    },
+    {
+        "display_name": "Choose the alignment for the text content in the hero banner. This controls the horizontal positioning of the content",
+        "reference": "content_alignment+hero_banner",
+        "value": "Center"
+    },
+    {
+        "display_name": "CTA Title",
+        "reference": "cta_title+hero_banner+cta_title",
+        "value": "Learn More"
+    },
+    {
+        "display_name": "Page Reference",
+        "reference": "page_reference+hero_banner+page_reference",
+        "value": "/solutions"
+    },
+    {
+        "display_name": "Open in new Tab",
+        "reference": "open_in_new_tab+hero_banner+open_in_new_tab",
+        "value": "Yes"
+    },
+    {
+        "display_name": "Add a visually impactful image that complements the banner content. Ensure it’s optimized for fast loading",
+        "reference": "images+hero_banner",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "Enter a short, descriptive title that summarizes the feature or benefit being highlighted",
+        "reference": "title+feature_highlights",
+        "value": "Advanced Technology"
+    },
+    {
+        "display_name": "Provide a brief description that explains the key benefits or functionality of the feature",
+        "reference": "description+feature_highlights",
+        "value": "Leverage state-of-the-art tools to streamline operations and boost productivity."
+    },
+    {
+        "display_name": "Choose a relevant post to feature alongside this highlight to provide more context or detail",
+        "reference": "featured_post+feature_highlights",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "Provide a clear headline that summarizes the key message of the promo",
+        "reference": "title+promo",
+        "value": "Limited Time Offer"
+    },
+    {
+        "display_name": "Provide key details about the promo, including benefits, deadlines, or special features",
+        "reference": "description+promo",
+        "value": "Save 20% on all services when you sign up by the end of this month!"
+    },
+    {
+        "display_name": "Select an image for the promo section; make sure it's high resolution",
+        "reference": "image+promo",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "Select a background color for the promo section. Use brand-approved colors only",
+        "reference": "background_color+promo",
+        "value": "#0044CC"
+    },
+    {
+        "display_name": "Select the promo variant to define its style and layout",
+        "reference": "variant+promo",
+        "value": "Standard"
+    },
+    {
+        "display_name": "Title",
+        "reference": "title+seperator",
+        "value": "Explore More"
+    },
+    {
+        "display_name": "Social Media Share",
+        "reference": "social_media_share+social_media_share",
+        "value": "Enabled"
+    },
+    {
+        "display_name": "Upload an image file to display. Prefer landscape orientation and optimized for web",
+        "reference": "file+image_component",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "Meta Title",
+        "reference": "meta_title+seo+seo",
+        "value": "Innovative Tech Solutions for Your Business"
+    },
+    {
+        "display_name": "Meta Description",
+        "reference": "meta_description+seo+seo",
+        "value": "Discover advanced technology solutions designed to enhance efficiency and drive success."
+    },
+    {
+        "display_name": "Meta Keywords",
+        "reference": "keywords+seo+seo",
+        "value": "technology, solutions, business, innovation"
+    },
+    {
+        "display_name": "Enable Search Indexing",
+        "reference": "enable_search_indexing+seo+seo",
+        "value": "Yes"
+    },
+    {
+        "display_name": "Twitter Title",
+        "reference": "twitter_title+seo+seo",
+        "value": "Transform Your Business with Our Tech Solutions"
+    },
+    {
+        "display_name": "Twitter Description",
+        "reference": "twitter_description+seo+seo",
+        "value": "Explore innovative tools to boost efficiency and growth. Learn more today!"
+    },
+    {
+        "display_name": "Twitter Image",
+        "reference": "twitter_image+seo+seo",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "Open Graph Title",
+        "reference": "open_graph_title+seo+seo",
+        "value": "Innovative Technology for Business Growth"
+    },
+    {
+        "display_name": "Open Graph Description",
+        "reference": "open_graph_description+seo+seo",
+        "value": "Unlock the potential of your business with our cutting-edge solutions."
+    },
+    {
+        "display_name": "Open Graph Image",
+        "reference": "open_graph_image+seo+seo",
+        "value": "No match found from source document."
+    },
+    {
+        "display_name": "nofollow",
+        "reference": "nofollow+seo+seo",
+        "value": "No"
+    },
+    {
+        "display_name": "noindex",
+        "reference": "noindex+seo+seo",
+        "value": "No"
+    },
+    {
+        "display_name": "Author",
+        "reference": "author+seo+seo",
+        "value": "Tech Solutions Team"
+    },
+    {
+        "display_name": "Enter the name of the technical offering. Keep it clear, concise, and specific to the service or solution provided\n\n",
+        "reference": "title+page_details",
+        "value": "Next-Gen Business Tools - Technical Content"
+    },
+    {
+        "display_name": "URL",
+        "reference": "url+page_details",
+        "value": "/business-tools"
+    },
+    {
+        "display_name": "Write a clear and informative summary that explains what this offering does and how it helps users or clients",
+        "reference": "description+page_details",
+        "value": "Our next-gen tools empower businesses to optimize workflows, reduce costs, and achieve sustainable growth."
+    },
+    {
+        "display_name": "Add a relevant image to support the offering. Ensure it is optimized for web and aligns with brand guidelines",
+        "reference": "image+page_details",
+        "value": "No match found from source document."
+    }
+]
