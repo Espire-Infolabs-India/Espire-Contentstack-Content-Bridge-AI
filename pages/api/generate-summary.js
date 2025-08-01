@@ -15,9 +15,7 @@ export const config = {
 };
 
 const isVercel = process.env.VERCEL === "1";
-
-//const uploadsDir = isVercel ? "/tmp" : path.join(process.cwd(), "public/images/uploads");
-const uploadsDir = path.join(process.cwd(), "public/images/uploads");
+const uploadsDir = isVercel ? "/tmp" : path.join(process.cwd(), "public/images/uploads");
 
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -186,16 +184,16 @@ export default async function handler(req, res) {
             }
         });
 
-      //  if(referenceObjects && referenceObjects != undefined){
-      //     await Promise.all(referenceObjects?.map(async (field) => {
-      //       if(field?.reference_to && field?.data_type == "reference"){
-      //         let entryName = field?.reference_to[0];
-      //         let displayName = field?.display_name;
-      //         let actual_uid = field?.uid;
-      //         return await getReferenceFieldsAsync(entryName, field);
-      //       }
-      //     }));
-      //   }
+       if(referenceObjects && referenceObjects != undefined){
+          await Promise.all(referenceObjects?.map(async (field) => {
+            if(field?.reference_to && field?.data_type == "reference"){
+              let entryName = field?.reference_to[0];
+              let displayName = field?.display_name;
+              let actual_uid = field?.uid;
+              return await getReferenceFieldsAsync(entryName, field);
+            }
+          }));
+        }
 
 
 
@@ -204,14 +202,7 @@ export default async function handler(req, res) {
         if (file?.mimetype === "application/pdf") {
           const filePath = file?.filepath;
           const fileName = file?.newFilename;
-
-          // if(isVercel){
-          //   PDFLink = process?.env?.BASE_URL+'/tmp/'+fileName;
-          // }else{
-          //   PDFLink = process?.env?.BASE_URL+'/images/uploads/'+fileName;
-          // }
           PDFLink = process?.env?.BASE_URL+'/images/uploads/'+fileName;
-          
           const pdfContent = await readPDFContent(filePath);
           truncatedContent = pdfContent.slice(0, 30000);
           //fs.unlink(filePath, () => {}); // Clean up uploaded file
@@ -235,7 +226,11 @@ export default async function handler(req, res) {
           ${truncatedContent}
         `;
 
-        //textSchemaObjectsForChatBot
+        // let tempData = TechnicalOfferingsResponse;
+        //     const mergedResponse = mergeArray(textSchemaObjectsForChatBot, tempData);
+        //     let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
+        //     const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
+        //     res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
 
       let rawOutput = "";
       if(selectedModel == "custom_bot"){
@@ -258,13 +253,15 @@ export default async function handler(req, res) {
 
         axios(config)
         .then(function (response) {
-          const parsedTemp = {}//response?.data?.result;
+          const parsedTemp = response?.data?.result;
+          //console.log('_____________________parsedTemp',parsedTemp);
           if(Array.isArray(parsedTemp)){
             const mergedResponse = mergeArray(textSchemaObjectsForChatBot, parsedTemp);
             let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
             const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
             res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
           }else{
+            console.log('_____________________Failure');
             let tempData = TechnicalOfferingsResponse;
             const mergedResponse = mergeArray(textSchemaObjectsForChatBot, tempData);
             let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
