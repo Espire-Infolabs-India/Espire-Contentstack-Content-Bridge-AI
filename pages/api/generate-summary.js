@@ -184,16 +184,16 @@ export default async function handler(req, res) {
             }
         });
 
-      //  if(referenceObjects && referenceObjects != undefined){
-      //     await Promise.all(referenceObjects?.map(async (field) => {
-      //       if(field?.reference_to && field?.data_type == "reference"){
-      //         let entryName = field?.reference_to[0];
-      //         let displayName = field?.display_name;
-      //         let actual_uid = field?.uid;
-      //         return await getReferenceFieldsAsync(entryName, field);
-      //       }
-      //     }));
-      //   }
+       if(referenceObjects && referenceObjects != undefined){
+          await Promise.all(referenceObjects?.map(async (field) => {
+            if(field?.reference_to && field?.data_type == "reference"){
+              let entryName = field?.reference_to[0];
+              let displayName = field?.display_name;
+              let actual_uid = field?.uid;
+              return await getReferenceFieldsAsync(entryName, field);
+            }
+          }));
+        }
 
 
 
@@ -226,7 +226,11 @@ export default async function handler(req, res) {
           ${truncatedContent}
         `;
 
-        //textSchemaObjectsForChatBot
+        // let tempData = TechnicalOfferingsResponse;
+        //     const mergedResponse = mergeArray(textSchemaObjectsForChatBot, tempData);
+        //     let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
+        //     const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
+        //     res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
 
       let rawOutput = "";
       if(selectedModel == "custom_bot"){
@@ -249,13 +253,15 @@ export default async function handler(req, res) {
 
         axios(config)
         .then(function (response) {
-          const parsedTemp = {}//response?.data?.result;
+          const parsedTemp = response?.data?.result;
+          //console.log('_____________________parsedTemp',parsedTemp);
           if(Array.isArray(parsedTemp)){
             const mergedResponse = mergeArray(textSchemaObjectsForChatBot, parsedTemp);
             let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
             const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
             res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
           }else{
+            console.log('_____________________Failure');
             let tempData = TechnicalOfferingsResponse;
             const mergedResponse = mergeArray(textSchemaObjectsForChatBot, tempData);
             let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];

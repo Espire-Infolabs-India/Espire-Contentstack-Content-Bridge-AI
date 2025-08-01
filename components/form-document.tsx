@@ -471,11 +471,13 @@ export default function HomePage() {
           }
           component[parentUid][name] = content;
         }
-      });
-
-
-
+      });   
+      
+      data["site_configuration"]= {"site_section":"Site-1"};
       data.page_components = componentData;
+      
+      // console.log('sample data:',data);
+      // return false;
 
       const myHeaders = new Headers();
       myHeaders.append("authorization", process.env.AUTHORIZATION as string);
