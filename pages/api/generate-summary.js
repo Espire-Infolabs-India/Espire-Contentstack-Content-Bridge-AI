@@ -15,9 +15,7 @@ export const config = {
 };
 
 const isVercel = process.env.VERCEL === "1";
-
-//const uploadsDir = isVercel ? "/tmp" : path.join(process.cwd(), "public/images/uploads");
-const uploadsDir = path.join(process.cwd(), "public/images/uploads");
+const uploadsDir = isVercel ? "/tmp" : path.join(process.cwd(), "public/images/uploads");
 
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -204,14 +202,7 @@ export default async function handler(req, res) {
         if (file?.mimetype === "application/pdf") {
           const filePath = file?.filepath;
           const fileName = file?.newFilename;
-
-          // if(isVercel){
-          //   PDFLink = process?.env?.BASE_URL+'/tmp/'+fileName;
-          // }else{
-          //   PDFLink = process?.env?.BASE_URL+'/images/uploads/'+fileName;
-          // }
           PDFLink = process?.env?.BASE_URL+'/images/uploads/'+fileName;
-          
           const pdfContent = await readPDFContent(filePath);
           truncatedContent = pdfContent.slice(0, 30000);
           //fs.unlink(filePath, () => {}); // Clean up uploaded file
