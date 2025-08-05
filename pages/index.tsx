@@ -26,6 +26,7 @@ export default function Home() {
           <h3>Delivery Token: {stackData.deliveryToken}</h3>
           <h3>Org UID: {stackData.org_uid}</h3>
           <h3>Owner UID: {stackData.owner_uid}</h3>
+          <h3>Region: {stackData.appRegion}</h3>
         </>
       )}
       <GenerateContent />

@@ -6,6 +6,7 @@ export type SafeStackInfo = {
   owner_uid?: string;
   cmaToken?: string;
   deliveryToken?: string;
+  appRegion?: string;
 };
 
 export const getStackInfo = async (): Promise<SafeStackInfo | null> => {
@@ -30,6 +31,7 @@ export const getStackInfo = async (): Promise<SafeStackInfo | null> => {
       owner_uid: data.owner_uid || "",
       cmaToken: config?.cmaToken || "",
       deliveryToken: config?.deliveryToken || "",
+      appRegion: config?.AppRegion || "",
     };
   } catch (error) {
     return null;

@@ -5,13 +5,16 @@ export interface AppConfigState {
   deliveryToken: string;
   loading: boolean;
   error: string | null;
+  appRegion: string;
   setCmaToken: (val: string) => void;
   setDeliveryToken: (val: string) => void;
+  setAppRegion: (val: string) => void;
   sdkRef: unknown;
 }
 
 export const useInitConfig = (): AppConfigState => {
   const [cmaToken, setCmaToken] = useState("");
+  const [appRegion, setAppRegion] = useState("us");
   const [deliveryToken, setDeliveryToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +42,7 @@ export const useInitConfig = (): AppConfigState => {
           await appConfigLocation.installation.getInstallationData();
         setCmaToken(existing?.configuration?.cmaToken || "");
         setDeliveryToken(existing?.configuration?.deliveryToken || "");
+        setAppRegion(existing?.configuration?.appRegion || "");
 
         if (typeof (appConfigLocation as any).setReady === "function") {
           (appConfigLocation as any).setReady();
@@ -64,6 +68,7 @@ export const useInitConfig = (): AppConfigState => {
           configuration: {
             cmaToken,
             deliveryToken,
+            appRegion,
           },
           isValid: true,
         });
@@ -73,15 +78,17 @@ export const useInitConfig = (): AppConfigState => {
     if (sdkRef) {
       updateInstallationData();
     }
-  }, [cmaToken, deliveryToken, sdkRef]);
+  }, [cmaToken, deliveryToken, appRegion, sdkRef]);
 
   return {
     cmaToken,
     deliveryToken,
+    appRegion,
     loading,
     error,
     setCmaToken,
     setDeliveryToken,
+    setAppRegion,
     sdkRef,
   };
 };
