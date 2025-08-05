@@ -1014,7 +1014,7 @@ export default function GenerateContent() {
               <h2>Select Content Types</h2>
             </div>
             <div className="p-4 border-[var(--border-color)] border-l-[1px] border-r-[1px]">
-              {contentTypeResult?.content_types?.map(
+              {contentTypeResult?.map(
                 (field: { options: any; title: string; uid: string }) =>
                   field.options.is_page && (
                     <div className="form-check" key={field.uid}>
