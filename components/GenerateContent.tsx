@@ -11,7 +11,7 @@ interface FormField {
   value: string;
 }
 
-export default function HomePage() {
+export default function GenerateContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
@@ -156,46 +156,7 @@ export default function HomePage() {
     if (file) handleFileSelect(file);
   };
 
-  // const showRegeneratePromptPopup = (id:any) => {
-  //   setModalOpen(true);
-  // }
-
-  // const regeneratePrompt = async (id:any, value:any) => {
-  //     let res = await fetch(`${baseUrl}/api/regenerate-prompt?id=${id}&value=${value}&model=${aiModel}`);
-  //     if (!res.ok){
-  //       return alert("We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes.");
-  //     }
-
-  //     let data = await res.json();
-  //     let inputEl = document.getElementById(`${id}`) as HTMLInputElement;
-  //     inputEl.value = data?.title;
-
-  //     let inputElMessage = document.getElementById(`${id}_message`) as HTMLInputElement;
-  //     inputElMessage.innerHTML = "Regenerated Value has been updated."
-  //     inputElMessage.classList.remove("hidden");
-  //     setTimeout(() => {
-  //       inputElMessage.classList.add("hidden");
-  //     }, 4000);
-  // }
-
-  // const regeneratePromptWithText = async (id:any, value:any) => {
-  //     let res = await fetch(`${baseUrl}/api/regenerate-prompt?id=${id}&value=${value}&model=${aiModel}`);
-  //     if (!res.ok){
-  //       return alert("We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes.");
-  //     }
-
-  //     let data = await res.json();
-  //     let inputEl = document.getElementById(`${id}`) as HTMLInputElement;
-  //     inputEl.value = data?.title;
-
-  //     let inputElMessage = document.getElementById(`${id}_message`) as HTMLInputElement;
-  //     inputElMessage.innerHTML = "Regenerated Value has been updated."
-  //     inputElMessage.classList.remove("hidden");
-  //     setTimeout(() => {
-  //       inputElMessage.classList.add("hidden");
-  //     }, 4000);
-  // }
-
+ 
   const generateContent = async (e: React.SyntheticEvent) => {
     if (!template) {
       setErrorAlert("Please select a content type.");
