@@ -5,6 +5,7 @@ import axios from "axios";
 import Settings from "./Settings";
 import AssetPicker from "./AssestPicker/AssetPicker";
 import { Asset } from "./AssestPicker/AssestPickerModel";
+import { fetchAllContentTypes } from "../helper/GenerateContentAPI";
 
 interface FormField {
   name: string;
@@ -102,12 +103,13 @@ export default function GenerateContent() {
     setBaseUrl(window?.location?.origin);
     const fetchData = async () => {
       try {
-        const res = await fetch(
-          `${window?.location?.origin}/api/get-content-types`
-        );
-        if (!res.ok) throw new Error("Failed to fetch content types");
-        const data = await res.json();
-        setContentTypeResult(data);
+        const res = await fetchAllContentTypes();       
+        console.log("data",res)
+        if(res)
+        {
+          console.log(res);
+        }
+        setContentTypeResult(res);
       } catch (err) {
         console.error("Fetch error:", err);
       }

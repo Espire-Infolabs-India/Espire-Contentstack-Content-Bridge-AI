@@ -10,7 +10,7 @@ export type SafeStackInfo = {
 
 export const getStackInfo = async (): Promise<SafeStackInfo | null> => {
   if (typeof window === "undefined") {
-    console.warn("getSafeStackInfo called on server – skipping SDK init");
+    console.warn("getSafeStackInfo called on server skipping SDK init");
     return null;
   }
 
