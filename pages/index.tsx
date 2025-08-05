@@ -1,11 +1,9 @@
-import FormDocument from "../components/GenerateContent";
-// import GenerateContent from '../components/GenerateContent/GenerateContent';
+import GenerateContent from "../components/GenerateContent";
 
 export default function Home() {
   return (
     <>
-      {/* <GenerateContent /> */}
-      <FormDocument />
+      <GenerateContent />
     </>
   );
 }
