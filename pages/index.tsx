@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import FormDocument from "../components/form-document";
+import GenerateContent from "../components/GenerateContent";
 import { getStackInfo, SafeStackInfo } from "../helper/get-stack-details";
 
 export default function Home() {
@@ -28,7 +28,7 @@ export default function Home() {
           <h3>Owner UID: {stackData.owner_uid}</h3>
         </>
       )}
-      <FormDocument />
+      <GenerateContent />
     </>
   );
 }
