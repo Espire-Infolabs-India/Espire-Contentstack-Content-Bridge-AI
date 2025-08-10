@@ -243,9 +243,9 @@ export default async function handler(req, res) {
 
         var config = {
           method: 'post',
-          url: 'https://cms-auto-agent-mobmv.eastus2.inference.ml.azure.com/score',
+          url: process?.env?.CUSTOM_BOT_END_POINT,
           headers: { 
-            'Authorization': 'Bearer CdnKkRIiO5llGRwdQt1oNPdyXZ4I31uKubIE3QRzi4A0n0B2sxeuJQQJ99BGAAAAAAAAAAAAINFRAZML2lSk', 
+            'Authorization': `Bearer ${process?.env?.CUSTOM_BOT_API_KEY}`, 
             'Content-Type': 'application/json'
           },
           data : data
