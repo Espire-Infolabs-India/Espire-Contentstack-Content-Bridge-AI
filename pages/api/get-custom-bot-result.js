@@ -8,7 +8,7 @@ var data = JSON.stringify({
 
 var config = {
   method: 'post',
-  url: 'https://cms-auto-agent-mobmv.eastus2.inference.ml.azure.com/score',
+  url: process?.env?.CUSTOM_BOT_END_POINT,
   headers: { 
     'Key': process?.env?.CUSTOM_BOT_API_KEY, 
     'Content-Type': 'application/json'
