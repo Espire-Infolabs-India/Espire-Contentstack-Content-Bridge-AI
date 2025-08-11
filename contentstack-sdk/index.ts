@@ -31,9 +31,9 @@ customHostBaseUrl = customHostBaseUrl ? customHostUrl(customHostBaseUrl) : "";
 const Stack = initializeContentStackSdk();
 
 // set host url only for custom host or non prod base url's
-if (customHostBaseUrl && isValidCustomHostUrl(customHostBaseUrl)) {
-  Stack.setHost(customHostBaseUrl);
-}
+// if (customHostBaseUrl && isValidCustomHostUrl(customHostBaseUrl)) {
+//   Stack.setHost(customHostBaseUrl);
+// }
 
 // Setting LP if enabled
 ContentstackLivePreview.init({
@@ -83,18 +83,18 @@ export async function resolveNestedEntry(entry: any): Promise<any> {
   return await resolveDeep(entry);
 }
 
-export async function getAllContentTypes() {
-  try {
-    const contentTypes = await Stack.getContentTypes({
-      include_global_field_schema: true,
-    });
+// export async function getAllContentTypes() {
+//   try {
+//     const contentTypes = await (await Stack).getContentTypes({
+//       include_global_field_schema: true,
+//     });
 
-    return contentTypes;
-  } catch (err) {
-    console.error("❌ Error fetching entries:", err);
-    return [];
-  }
-}
+//     return contentTypes;
+//   } catch (err) {
+//     console.error("❌ Error fetching entries:", err);
+//     return [];
+//   }
+// }
 
 export async function getContentType(contentType: string) {
   try {
