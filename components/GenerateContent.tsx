@@ -5,6 +5,8 @@ import axios from "axios";
 import Settings from "./Settings";
 import AssetPicker from "./AssestPicker/AssetPicker";
 import { Asset } from "./AssestPicker/AssestPickerModel";
+import { getStackInfo } from "../helper/get-stack-details";
+import { fetchAllContentTypes } from "../helper/GenerateContentAPI";
 
 interface FormField {
   name: string;
@@ -102,12 +104,8 @@ export default function GenerateContent() {
     setBaseUrl(window?.location?.origin);
     const fetchData = async () => {
       try {
-        const res = await fetch(
-          `${window?.location?.origin}/api/get-content-types`
-        );
-        if (!res.ok) throw new Error("Failed to fetch content types");
-        const data = await res.json();
-        setContentTypeResult(data);
+        const res = await fetchAllContentTypes();
+        setContentTypeResult(res);
       } catch (err) {
         console.error("Fetch error:", err);
       }
@@ -156,7 +154,6 @@ export default function GenerateContent() {
     if (file) handleFileSelect(file);
   };
 
- 
   const generateContent = async (e: React.SyntheticEvent) => {
     if (!template) {
       setErrorAlert("Please select a content type.");
@@ -266,13 +263,16 @@ export default function GenerateContent() {
     formData.append("asset[title]", file.name);
 
     try {
+      const stackData = await getStackInfo();
+      const api_key = stackData?.apiKey;
+      const authorization = stackData?.deliveryToken;
       const response = await axios.post(
         "https://api.contentstack.io/v3/assets",
         formData,
         {
           headers: {
-            api_key: process.env.API_KEY as string,
-            authorization: process.env.AUTHORIZATION as string,
+            api_key: api_key as string,
+            authorization: authorization as string,
             "Content-Type": "multipart/form-data",
           },
         }
@@ -396,8 +396,8 @@ export default function GenerateContent() {
         }
       });
 
-
-      const formDropdownsNormal = document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
+      const formDropdownsNormal =
+        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
       formDropdownsNormal.forEach((dropdown) => {
         let id = dropdown.id;
         let name = dropdown.name;
@@ -432,17 +432,20 @@ export default function GenerateContent() {
           }
           component[parentUid][name] = content;
         }
-      });   
-      
-      data["site_configuration"]= {"site_section":"Site-1"};
+      });
+
+      data["site_configuration"] = { site_section: "Site-1" };
       data.page_components = componentData;
-      
+
       // console.log('sample data:',data);
       // return false;
 
       const myHeaders = new Headers();
-      myHeaders.append("authorization", process.env.AUTHORIZATION as string);
-      myHeaders.append("api_key", process.env.API_KEY as string);
+      const stackData = await getStackInfo();
+      const api_key = stackData?.apiKey;
+      const authorization = stackData?.deliveryToken;
+      myHeaders.append("authorization", authorization as string);
+      myHeaders.append("api_key", api_key as string);
       myHeaders.append("Content-Type", "application/json");
 
       const raw = JSON.stringify({ entry: { ...data } });
@@ -516,8 +519,11 @@ export default function GenerateContent() {
   // isPublish:boolean
   const publishEntry = async (EntriyUid: string) => {
     const myHeaders = new Headers();
-    myHeaders.append("authorization", process.env.AUTHORIZATION as string);
-    myHeaders.append("api_key", process.env.API_KEY as string);
+    const stackData = await getStackInfo();
+    const api_key = stackData?.apiKey;
+    const authorization = stackData?.deliveryToken;
+    myHeaders.append("authorization", authorization as string);
+    myHeaders.append("api_key", api_key as string);
     myHeaders.append("Content-Type", "application/json");
 
     const data = JSON.stringify({
@@ -599,15 +605,15 @@ export default function GenerateContent() {
                             <option value="">Choose...</option>
                             {field?.enum?.choices?.map(
                               (ele: any, ind: number) => (
-                                  <option key={ind} value={ele?.value}>
-                                    {ele?.value}
-                                  </option>
-                                )
+                                <option key={ind} value={ele?.value}>
+                                  {ele?.value}
+                                </option>
+                              )
                             )}
                           </select>
                         </div>
                       );
-                    }else if (field?.data_type === "text") {
+                    } else if (field?.data_type === "text") {
                       return (
                         <div
                           key={field?.uid ?? parentUid}
@@ -1012,7 +1018,7 @@ export default function GenerateContent() {
               <h2>Select Content Types</h2>
             </div>
             <div className="p-4 border-[var(--border-color)] border-l-[1px] border-r-[1px]">
-              {contentTypeResult?.content_types?.map(
+              {contentTypeResult?.map(
                 (field: { options: any; title: string; uid: string }) =>
                   field.options.is_page && (
                     <div className="form-check" key={field.uid}>

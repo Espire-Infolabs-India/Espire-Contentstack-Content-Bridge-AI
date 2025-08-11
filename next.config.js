@@ -12,20 +12,20 @@ const config = {
     }
     return config;
   },
-  env:{
-    AUTHORIZATION: process.env.AUTHORIZATION,
-    API_KEY: process.env.API_KEY,
-  },
+  // env:{
+  //   AUTHORIZATION: process.env.AUTHORIZATION,
+  //   API_KEY: process.env.API_KEY,
+  // },
   images: {
     domains: ["www.netgear.com", "downloads1.netgear.com", "images.contentstack.io"],
   },
 
   publicRuntimeConfig: {
     // Will be available on both server and client
-    CONTENTSTACK_API_KEY: process.env.CONTENTSTACK_API_KEY,
-    CONTENTSTACK_DELIVERY_TOKEN: process.env.CONTENTSTACK_DELIVERY_TOKEN,
-    CONTENTSTACK_BRANCH: process.env.CONTENTSTACK_BRANCH || "main",
-    CONTENTSTACK_REGION: process.env.CONTENTSTACK_REGION || "us",
+    // CONTENTSTACK_API_KEY: process.env.CONTENTSTACK_API_KEY,
+    // CONTENTSTACK_DELIVERY_TOKEN: process.env.CONTENTSTACK_DELIVERY_TOKEN,
+    // CONTENTSTACK_BRANCH: process.env.CONTENTSTACK_BRANCH || "main",
+    // CONTENTSTACK_REGION: process.env.CONTENTSTACK_REGION || "us",
     CONTENTSTACK_ENVIRONMENT: process.env.CONTENTSTACK_ENVIRONMENT,
     CONTENTSTACK_PREVIEW_TOKEN: process.env.CONTENTSTACK_PREVIEW_TOKEN,
     CONTENTSTACK_PREVIEW_HOST:
