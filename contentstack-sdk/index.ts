@@ -6,19 +6,6 @@ import {
   isValidCustomHostUrl,
 } from "./utils";
 
-type GetEntry = {
-  contentTypeUid: string;
-  referenceFieldPath: string[] | undefined;
-  jsonRtePath: string[] | undefined;
-};
-
-type GetEntryByUrl = {
-  entryUrl: string | undefined;
-  contentTypeUid: string;
-  referenceFieldPath: string[] | undefined;
-  jsonRtePath: string[] | undefined;
-};
-
 const { publicRuntimeConfig } = getConfig();
 const envConfig = process.env.CONTENTSTACK_API_KEY
   ? process.env
@@ -27,15 +14,8 @@ const envConfig = process.env.CONTENTSTACK_API_KEY
 let customHostBaseUrl = envConfig.CONTENTSTACK_API_HOST as string;
 customHostBaseUrl = customHostBaseUrl ? customHostUrl(customHostBaseUrl) : "";
 
-// SDK initialization
 const Stack = initializeContentStackSdk();
 
-// set host url only for custom host or non prod base url's
-// if (customHostBaseUrl && isValidCustomHostUrl(customHostBaseUrl)) {
-//   Stack.setHost(customHostBaseUrl);
-// }
-
-// Setting LP if enabled
 ContentstackLivePreview.init({
   //@ts-ignore
   stackSdk: Stack,
@@ -82,19 +62,6 @@ export async function resolveNestedEntry(entry: any): Promise<any> {
   }
   return await resolveDeep(entry);
 }
-
-// export async function getAllContentTypes() {
-//   try {
-//     const contentTypes = await (await Stack).getContentTypes({
-//       include_global_field_schema: true,
-//     });
-
-//     return contentTypes;
-//   } catch (err) {
-//     console.error("❌ Error fetching entries:", err);
-//     return [];
-//   }
-// }
 
 export async function getContentType(contentType: string) {
   try {
