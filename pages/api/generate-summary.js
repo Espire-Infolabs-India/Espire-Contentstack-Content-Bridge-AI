@@ -197,11 +197,12 @@ export default async function handler(req, res) {
 
       let textSchemaObjectsForChatBotFiltered = allSchemaObjects?.map(
         (field) => ({
-          display_name:
-            field?.field_metadata?.instruction || field?.display_name,
+          display_name: field?.display_name,
+          // "display_name": field?.field_metadata?.instruction || field?.display_name,
           reference: field?.parent_to_uid
             ? field?.uid + "+" + field?.parent_uid + "+" + field?.parent_to_uid
             : field?.uid + "+" + field?.parent_uid,
+          help_text: field?.field_metadata?.instruction,
         })
       );
 
@@ -245,7 +246,6 @@ export default async function handler(req, res) {
 
       const instructions = Prompt?.instructions || [];
       const promptText = Prompt?.promptText || "";
-
       const prompt = `
           ${promptText}
 
@@ -271,12 +271,13 @@ export default async function handler(req, res) {
           blob_url: PDFLink == "" ? url[0] : PDFLink,
           user_prompt:
             "Rewrite in a more engaging style, but maintain all important details.", // Remain Static as of now
-          brand_website_url: "https://www.oki.com/global/profile/brand/", // Remain Static as of now
+          brand_website_url: "https://www.netgear.com/about/", // Remain Static as of now
           content_type: JSON.stringify(
             textSchemaObjectsForChatBotFiltered,
             null,
             2
           ), //textSchemaObjectsForChatBot,
+          // "content_type": JSON.stringify(textSchemaObjectsForChatBotFiltered, null, 2),//textSchemaObjectsForChatBot,
         };
 
         var config = {
@@ -291,7 +292,6 @@ export default async function handler(req, res) {
 
         axios(config).then(function (response) {
           const parsedTemp = response?.data?.result;
-          //console.log('_____________________parsedTemp',parsedTemp);
           if (Array.isArray(parsedTemp)) {
             const mergedResponse = mergeArray(
               textSchemaObjectsForChatBot,
