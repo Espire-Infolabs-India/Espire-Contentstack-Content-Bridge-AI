@@ -10,10 +10,12 @@ export default async function handler(
   const authorization = Array.isArray(req.headers.authorization)
     ? (req.headers.authorization[0] as string)
     : (req.headers.authorization as string);
-  // const response = await fetch("https://api.contentstack.io/v3/assets?include_folders=true&sort=created_at&asc=true&limit=500&skip=0", {
-  const response = await fetch("https://api.contentstack.io/v3/assets?include_folders=true&sort=created_at", {
-    headers: { api_key, authorization },
-  });
+  const response = await fetch(
+    "https://api.contentstack.io/v3/assets?include_folders=true&sort=created_at",
+    {
+      headers: { api_key, authorization },
+    }
+  );
   const data = await response.json();
   res.status(response.status).json(data);
 }

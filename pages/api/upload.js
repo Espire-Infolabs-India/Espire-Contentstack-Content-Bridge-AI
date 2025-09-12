@@ -2,7 +2,6 @@ import formidable from "formidable";
 import fs from "fs";
 import FormData from "form-data";
 import { getStackInfo } from "../../helper/get-stack-details";
-// Disable default body parser
 export const config = {
   api: {
     bodyParser: false,
@@ -44,7 +43,7 @@ export default async function handler(req, res) {
         uploadedFile.originalFilename
       );
       formData.append("asset[title]", uploadedFile.originalFilename);
-      formData.append("asset[parent_uid]", "blta42646848b3f92fe"); // adjust this if needed
+      formData.append("asset[parent_uid]", "blta42646848b3f92fe");
 
       const uploadRes = await fetch("https://api.contentstack.io/v3/assets", {
         method: "POST",

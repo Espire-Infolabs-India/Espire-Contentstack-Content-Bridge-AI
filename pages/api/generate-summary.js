@@ -59,17 +59,14 @@ function groupFieldsByParentUid(fieldsList) {
 
 function mergeArray(array1, array2) {
   const mergedArray = array1.map((item) => {
-    // Create key using item.uid + parent_uid (+ parent_to_uid if exists)
     const referenceKeyParts = [item.uid, item.parent_uid];
     if (item.parent_to_uid) {
       referenceKeyParts.push(item.parent_to_uid);
     }
     const referenceKey = referenceKeyParts.join("+");
 
-    // Find match in array2
     const matched = array2?.find((ref) => ref.reference === referenceKey);
 
-    // If match found, merge value into item
     if (matched) {
       return {
         ...item,
@@ -114,9 +111,6 @@ export default async function handler(req, res) {
     try {
       const getContentTypeDetail = await getContentType(templateName);
       const schemas = getContentTypeDetail[0]?.schema;
-
-      let pageTitle = getContentTypeDetail[0]?.title;
-      let pageUid = getContentTypeDetail[0]?.uid;
       let pageSchemas =
         schemas?.filter((field) => field?.data_type == "blocks") || [];
 
@@ -198,7 +192,6 @@ export default async function handler(req, res) {
       let textSchemaObjectsForChatBotFiltered = allSchemaObjects?.map(
         (field) => ({
           display_name: field?.display_name,
-          // "display_name": field?.field_metadata?.instruction || field?.display_name,
           reference: field?.parent_to_uid
             ? field?.uid + "+" + field?.parent_uid + "+" + field?.parent_to_uid
             : field?.uid + "+" + field?.parent_uid,
@@ -239,7 +232,6 @@ export default async function handler(req, res) {
         PDFLink = process?.env?.BASE_URL + "/images/uploads/" + fileName;
         const pdfContent = await readPDFContent(filePath);
         truncatedContent = pdfContent.slice(0, 30000);
-        //fs.unlink(filePath, () => {}); // Clean up uploaded file
       } else if (url) {
         truncatedContent = url;
       }
@@ -259,25 +251,18 @@ export default async function handler(req, res) {
           ${truncatedContent}
         `;
 
-      // let tempData = TechnicalOfferingsResponse;
-      //     const mergedResponse = mergeArray(textSchemaObjectsForChatBot, tempData);
-      //     let finalFieldsArray = [...mergedResponse, ...fileSchemaObjectsForChatBot , ...refrerenceFieldsList];
-      //     const groupedOutput = groupFieldsByParentUid(finalFieldsArray);
-      //     res.status(200).json({"summary": JSON.stringify(groupedOutput, null, 2) });
-
       let rawOutput = "";
       if (selectedModel == "custom_bot") {
         var data = {
           blob_url: PDFLink == "" ? url[0] : PDFLink,
           user_prompt:
-            "Rewrite in a more engaging style, but maintain all important details.", // Remain Static as of now
-          brand_website_url: "https://www.netgear.com/about/", // Remain Static as of now
+            "Rewrite in a more engaging style, but maintain all important details.",
+          brand_website_url: "https://www.netgear.com/about/",
           content_type: JSON.stringify(
             textSchemaObjectsForChatBotFiltered,
             null,
             2
-          ), //textSchemaObjectsForChatBot,
-          // "content_type": JSON.stringify(textSchemaObjectsForChatBotFiltered, null, 2),//textSchemaObjectsForChatBot,
+          ),
         };
 
         var config = {
@@ -307,7 +292,6 @@ export default async function handler(req, res) {
               .status(200)
               .json({ summary: JSON.stringify(groupedOutput, null, 2) });
           } else {
-            console.log("_____________________Failure");
             let tempData = TechnicalOfferingsResponse;
             const mergedResponse = mergeArray(
               textSchemaObjectsForChatBot,
@@ -344,7 +328,6 @@ export default async function handler(req, res) {
           .status(200)
           .json({ summary: JSON.stringify(groupedOutput, null, 2) });
       } else if (selectedModel.includes("gpt")) {
-        console.log("________in gpt");
         const { OpenAI } = await import("openai");
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         const result = await openai.chat.completions.create({

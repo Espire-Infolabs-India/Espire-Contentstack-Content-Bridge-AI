@@ -7,7 +7,6 @@ import Layout from "../components/layout";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 
-// for tailwind css
 import "../src/app/globals.css";
 
 import "nprogress/nprogress.css";
@@ -17,7 +16,6 @@ import "react-loading-skeleton/dist/skeleton.css";
 import "@contentstack/live-preview-utils/dist/main.css";
 import { Props } from "../typescript/pages";
 
-// Create a theme
 const theme = createTheme({
   palette: {
     primary: {
@@ -86,9 +84,9 @@ function MyApp(props: Props) {
 
 MyApp.getInitialProps = async (appContext: any) => {
   const appProps = await App.getInitialProps(appContext);
-  const header = {}; //await getHeaderRes();
-  const footer = {}; //await getFooterRes();
-  const entries = {}; //await getAllEntries();
+  const header = {};
+  const footer = {};
+  const entries = {};
 
   return { ...appProps, header, footer, entries };
 };

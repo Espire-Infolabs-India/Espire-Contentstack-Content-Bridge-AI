@@ -10,18 +10,15 @@ export type SafeStackInfo = {
 };
 
 export const getStackInfo = async (): Promise<SafeStackInfo | null> => {
-  if (typeof window === "undefined") {
+  if (typeof window !== "undefined") {
     console.warn("getSafeStackInfo called on server skipping SDK init");
-    return null;
   }
-
   try {
     const ContentstackAppSdk = (await import("@contentstack/app-sdk")).default;
     const sdk: any = await ContentstackAppSdk.init();
 
     const currentBranch = sdk?.stack?._currentBranch || {};
     const data = sdk?.stack?._data || {};
-    console.log("test", sdk?.stack);
     const config = (await sdk.getConfig?.()) || {};
 
     return {
@@ -35,6 +32,7 @@ export const getStackInfo = async (): Promise<SafeStackInfo | null> => {
       appRegion: config?.appRegion || "",
     };
   } catch (error) {
+    console.log(error);
     return null;
   }
 };
