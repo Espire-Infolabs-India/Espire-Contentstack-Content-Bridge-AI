@@ -5,7 +5,6 @@ import axios from "axios";
 import Settings from "./Settings";
 import AssetPicker from "./AssestPicker/AssetPicker";
 import { Asset } from "./AssestPicker/AssestPickerModel";
-import { getStackInfo } from "../helper/get-stack-details";
 import { fetchAllContentTypes } from "../helper/GenerateContentAPI";
 
 interface FormField {
@@ -13,7 +12,9 @@ interface FormField {
   value: string;
 }
 
-export default function GenerateContent() {
+export default function GenerateContent({isDataLoaded} : {isDataLoaded: boolean}) {
+  console.log("isDataLoaded", isDataLoaded);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
@@ -38,9 +39,53 @@ export default function GenerateContent() {
   const [finalResult, setFinalResult] = useState<any>(null);
   const [baseUrl, setBaseUrl] = useState<string>("");
   const [isModalOpen, setModalOpen] = useState(false);
-
   const [assetMap, setAssetMap] = useState<{ [uid: string]: Asset }>({});
+const [ready, setReady] = useState(false);
 
+
+
+  // helper delay fn
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  useEffect(() => {
+    if (!isDataLoaded) return;
+
+    const fetchData = async () => {
+      console.log("⏳ Waiting 10s before fetching content types...");
+      await delay(10000);
+
+      try {
+        setBaseUrl(window?.location?.origin);
+        const res = await fetchAllContentTypes();
+        setContentTypeResult(res);
+        setReady(true); // ✅ show actual content only after fetch done
+      } catch (err) {
+        console.error("❌ Fetch error:", err);
+      }
+    };
+
+    fetchData();
+  }, [isDataLoaded]);
+
+  if (!isDataLoaded || !ready) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
+        We are making things ready for you...
+      </div>
+    );
+  }
+
+
+
+
+     if (!isDataLoaded || !ready) {
+    // Render a loading state while stack info is not set
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
+        We are making things ready for you...
+      </div>
+    );
+  }
   const getAssetFromPicker = (uid: string, asset: Asset): void => {
     setAssetMap((prev) => ({ ...prev, [uid]: asset }));
   };
@@ -99,20 +144,7 @@ export default function GenerateContent() {
     setAIModel((e.target as HTMLInputElement).value);
   };
 
-  useEffect(() => {
-    console.log("------------------------v6.1");
-    setBaseUrl(window?.location?.origin);
-    const fetchData = async () => {
-      try {
-        const res = await fetchAllContentTypes();
-        setContentTypeResult(res);
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    };
 
-    fetchData();
-  }, []);
 
   const handleFileSelect = (file: File) => {
     if (url.trim()) {
@@ -154,6 +186,7 @@ export default function GenerateContent() {
     if (file) handleFileSelect(file);
   };
 
+ 
   const generateContent = async (e: React.SyntheticEvent) => {
     if (!template) {
       setErrorAlert("Please select a content type.");
@@ -263,16 +296,13 @@ export default function GenerateContent() {
     formData.append("asset[title]", file.name);
 
     try {
-      const stackData = await getStackInfo();
-      const api_key = stackData?.apiKey;
-      const authorization = stackData?.deliveryToken;
       const response = await axios.post(
         "https://api.contentstack.io/v3/assets",
         formData,
         {
           headers: {
-            api_key: api_key as string,
-            authorization: authorization as string,
+            api_key: process.env.API_KEY as string,
+            authorization: process.env.AUTHORIZATION as string,
             "Content-Type": "multipart/form-data",
           },
         }
@@ -396,8 +426,8 @@ export default function GenerateContent() {
         }
       });
 
-      const formDropdownsNormal =
-        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
+
+      const formDropdownsNormal = document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
       formDropdownsNormal.forEach((dropdown) => {
         let id = dropdown.id;
         let name = dropdown.name;
@@ -432,20 +462,17 @@ export default function GenerateContent() {
           }
           component[parentUid][name] = content;
         }
-      });
-
-      data["site_configuration"] = { site_section: "Site-1" };
+      });   
+      
+      data["site_configuration"]= {"site_section":"Site-1"};
       data.page_components = componentData;
-
+      
       // console.log('sample data:',data);
       // return false;
 
       const myHeaders = new Headers();
-      const stackData = await getStackInfo();
-      const api_key = stackData?.apiKey;
-      const authorization = stackData?.deliveryToken;
-      myHeaders.append("authorization", authorization as string);
-      myHeaders.append("api_key", api_key as string);
+      myHeaders.append("authorization", process.env.AUTHORIZATION as string);
+      myHeaders.append("api_key", process.env.API_KEY as string);
       myHeaders.append("Content-Type", "application/json");
 
       const raw = JSON.stringify({ entry: { ...data } });
@@ -519,11 +546,8 @@ export default function GenerateContent() {
   // isPublish:boolean
   const publishEntry = async (EntriyUid: string) => {
     const myHeaders = new Headers();
-    const stackData = await getStackInfo();
-    const api_key = stackData?.apiKey;
-    const authorization = stackData?.deliveryToken;
-    myHeaders.append("authorization", authorization as string);
-    myHeaders.append("api_key", api_key as string);
+    myHeaders.append("authorization", process.env.AUTHORIZATION as string);
+    myHeaders.append("api_key", process.env.API_KEY as string);
     myHeaders.append("Content-Type", "application/json");
 
     const data = JSON.stringify({
@@ -605,15 +629,15 @@ export default function GenerateContent() {
                             <option value="">Choose...</option>
                             {field?.enum?.choices?.map(
                               (ele: any, ind: number) => (
-                                <option key={ind} value={ele?.value}>
-                                  {ele?.value}
-                                </option>
-                              )
+                                  <option key={ind} value={ele?.value}>
+                                    {ele?.value}
+                                  </option>
+                                )
                             )}
                           </select>
                         </div>
                       );
-                    } else if (field?.data_type === "text") {
+                    }else if (field?.data_type === "text") {
                       return (
                         <div
                           key={field?.uid ?? parentUid}

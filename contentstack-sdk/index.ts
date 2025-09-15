@@ -1,36 +1,6 @@
-import ContentstackLivePreview from "@contentstack/live-preview-utils";
-import getConfig from "next/config";
-import {
-  customHostUrl,
-  initializeContentStackSdk,
-  isValidCustomHostUrl,
-} from "./utils";
+import { fetchContentTypes } from "../helper/GenerateContentAPI";
 import { getStackInfo } from "../helper/get-stack-details";
 
-const { publicRuntimeConfig } = getConfig();
-const envConfig = process.env.CONTENTSTACK_API_KEY
-  ? process.env
-  : publicRuntimeConfig;
-
-let customHostBaseUrl = envConfig.CONTENTSTACK_API_HOST as string;
-customHostBaseUrl = customHostBaseUrl ? customHostUrl(customHostBaseUrl) : "";
-
-const Stack = initializeContentStackSdk();
-
-ContentstackLivePreview.init({
-  //@ts-ignore
-  stackSdk: Stack,
-  clientUrlParams: {
-    host: envConfig.CONTENTSTACK_APP_HOST,
-  },
-  ssr: false,
-})?.catch((err) => console.error(err));
-
-export const { onEntryChange } = ContentstackLivePreview;
-
-const renderOption = {
-  span: (node: any, next: any) => next(node.children),
-};
 
 async function getEntry({
   contentTypeUid,
@@ -56,29 +26,29 @@ async function getEntry({
   return data.entry;
 }
 
-async function getContentTypes({
-  includeGlobalFieldSchema = true,
-}: {
-  includeGlobalFieldSchema?: boolean;
-}) {
-  const url = `https://api.contentstack.io/v3/content_types/?include_global_field_schema=${includeGlobalFieldSchema}`;
-  const stackdata = await getStackInfo();
-  console.log("stackdata",stackdata);
-  const response = await fetch(url, {
-    headers: {
-      api_key: stackdata?.apiKey!,
-      authorization: stackdata?.cmaToken!,
-    },
-  });
+// async function getContentTypes({
+//   includeGlobalFieldSchema = true,
+// }: {
+//   includeGlobalFieldSchema?: boolean;
+// }) {
+//   const url = `https://api.contentstack.io/v3/content_types/?include_global_field_schema=${includeGlobalFieldSchema}`;
+//   const stackdata = await getStackInfo();
+//   console.log("stackdata",stackdata);
+//   const response = await fetch(url, {
+//     headers: {
+//       api_key: stackdata?.apiKey!,
+//       authorization: stackdata?.cmaToken!,
+//     },
+//   });
 
-  if (!response.ok) {
-    throw new Error(`Error fetching content types: ${response.statusText}`);
-  }
+//   if (!response.ok) {
+//     throw new Error(`Error fetching content types: ${response.statusText}`);
+//   }
 
-  const data = await response.json();
+//   const data = await response.json();
 
-  return data.content_types;
-}
+//   return data.content_types;
+// }
 
 export async function resolveNestedEntry(entry: any): Promise<any> {
   async function resolveDeep(obj: any): Promise<any> {
@@ -112,23 +82,65 @@ export async function resolveNestedEntry(entry: any): Promise<any> {
   return await resolveDeep(entry);
 }
 
-export async function getContentType(contentType: string) {
-  console.log("Inside getContentType function with contentType:", contentType);
-  try {
-    const content_types = await getContentTypes({
-      includeGlobalFieldSchema: true,
-    });
+// export async function getContentType(contentType: string) {
+//   console.log("Inside getContentType function with contentType:", contentType);
+//   try {
+//     console.log("Inside try block of getContentType");
+//     try{
+//     const content_types =  await fetchContentTypes(true);
+//     }catch(err){
+//       console.error("Error fetching content types:", err);
 
+//     }
+
+
+// // console.log("Content types fetched:", content_types);
+//     const pageContentTypes = content_types.filter(
+//       (ct: any) => ct.uid == contentType
+//     );
+//     const resolvedEntries = await Promise.all(
+//       pageContentTypes.map((entry: any) => resolveNestedEntry(entry))
+//     );
+
+//     return resolvedEntries;
+//   } catch (err) {
+//     console.error("❌ Error fetching entries:", err);
+//     return [];
+//   }
+// }
+
+export async function getContentType(contentType: string) {
+  try {
+    let content_types: any[] = [];
+
+    try {
+      content_types = await fetchContentTypes(true);
+    } catch (err) {
+      console.error("❌ Error fetching content types:", err);
+      return []; 
+    }
+    console.log("Content types Loaded   ::::");
     const pageContentTypes = content_types.filter(
-      (ct: any) => ct.uid == contentType
+      (ct: any) =>
+        Array.isArray(contentType)
+          ? contentType.includes(ct.uid)
+          : ct.uid === contentType
     );
+
+    console.log("Page Content Types   ::::", pageContentTypes);
+
+    if (pageContentTypes.length === 0) {
+      console.warn(`⚠️ No content type found for uid: ${contentType}`);
+      return [];
+    }
+
     const resolvedEntries = await Promise.all(
       pageContentTypes.map((entry: any) => resolveNestedEntry(entry))
     );
 
     return resolvedEntries;
   } catch (err) {
-    console.error("❌ Error fetching entries:", err);
+    console.error("❌ Error in getContentType:", err);
     return [];
   }
 }

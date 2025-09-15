@@ -15,6 +15,8 @@ import "../styles/style.css";
 import "react-loading-skeleton/dist/skeleton.css";
 import "@contentstack/live-preview-utils/dist/main.css";
 import { Props } from "../typescript/pages";
+import { useState, useEffect } from "react";
+import { SafeStackInfo, getStackInfo } from "../helper/get-stack-details";
 
 const theme = createTheme({
   palette: {
@@ -34,6 +36,25 @@ Router.events.on("routeChangeError", () => NProgress.done());
 function MyApp(props: Props) {
   const { Component, pageProps } = props;
   const { page, posts, archivePost } = pageProps;
+
+    const [stackData, setStackData] = useState<SafeStackInfo | null>(null);
+  
+    // useEffect(() => {
+    //   const run = async () => {
+    //     const data = await getStackInfo();
+    //     if (data) {
+    //       console.log("stackdata", data);
+    //       setStackData(data);
+
+    //        await fetch("/api/set-stack-info", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(data),
+    //   });
+    //     }
+    //   };
+    //   run();
+    // }, []);
 
   const metaData = (seo: any) => {
     const metaArr = [];
@@ -72,6 +93,20 @@ function MyApp(props: Props) {
         <title>Contentstack</title>
         {page?.seo && page.seo.enable_search_indexing && metaData(page.seo)}
       </Head>
+
+
+       {/* {stackData && (
+        <>
+          <h3>Stack Name from APP : {stackData.stackname}</h3>
+          <h3>API Key from APP: {stackData.apiKey}</h3>
+          <h3>Branch from APP: {stackData.branch}</h3>
+          <h3>CMA TOKEN from APP: {stackData.cmaToken}</h3>
+          <h3>Delivery Token from APP: {stackData.deliveryToken}</h3>
+          <h3>Org UID from APP: {stackData.org_uid}</h3>
+          <h3>Owner UID from APP: {stackData.owner_uid}</h3>
+          <h3>Region from APP: {stackData.appRegion}</h3>
+        </>
+      )} */}
       <Layout page={page} blogList={blogList}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
