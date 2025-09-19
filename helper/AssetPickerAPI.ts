@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const fetchAssets = async (jwt: string) => {
   const res = await axios.get("/api/fetch-assets", {
-
+    headers: { Authorization: `Bearer ${jwt}` },
   });
   return res.data.assets;
 };
@@ -15,9 +15,9 @@ export const fetchFolders = async (jwt: string) => {
 };
 
 export const createFolder = async (jwt: string, name: string) => {
-  return axios.post( 
+  return axios.post(
     "/api/create-folder",
-    { asset: { name } }, 
+    { asset: { name } },
     {
       headers: {
         Authorization: `Bearer ${jwt}`,
@@ -26,9 +26,11 @@ export const createFolder = async (jwt: string, name: string) => {
   );
 };
 
-
-export const uploadAsset = async (jwt: string, file: File, parent_uid: string) => {
-
+export const uploadAsset = async (
+  jwt: string,
+  file: File,
+  parent_uid: string
+) => {
   const formData = new FormData();
   formData.append("asset[upload]", file);
   formData.append("asset[title]", file.name);
