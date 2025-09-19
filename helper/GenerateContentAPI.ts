@@ -3,7 +3,7 @@ import axios from "axios";
 export const fetchAllContentTypes = async (jwt: string): Promise<any[]> => {
   try {
     const res = await axios.get("/api/get-content-types", {
-      headers: { Authorization: `Bearer ${jwt}` }, // pass JWT
+      headers: { Authorization: `Bearer ${jwt}` },
     });
     return res.data.content_types;
   } catch (err) {

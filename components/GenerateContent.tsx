@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
 import axios from "axios";
 import Settings from "./Settings";
-import AssetPicker from "./AssestPicker/AssetPicker";
-import { Asset } from "./AssestPicker/AssestPickerModel";
+import AssetPicker from "./AssetPicker/AssetPicker";
+import { Asset } from "./AssetPicker/AssetPickerModel";
 import { fetchAllContentTypes } from "../helper/GenerateContentAPI";
 import { ConfigPayload } from "../helper/PropTypes";
 
@@ -278,50 +278,7 @@ const [ready, setReady] = useState(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoading(true);
-    const input = e.target as HTMLInputElement;
-    const inputId = input.id;
-    const file = e.target.files?.[0];
-
-    if (file) {
-      handleFileUpload(file, inputId);
-    }
-  };
-
-  const handleFileUpload = async (file: File, inputId: string) => {
-    const formData = new FormData();
-    formData.append("asset[upload]", file);
-    formData.append("asset[title]", file.name);
-
-    try {
-      const response = await axios.post(
-        "https://api.contentstack.io/v3/assets",
-        formData,
-        {
-          headers: {
-            api_key: process.env.API_KEY as string,
-            authorization: process.env.AUTHORIZATION as string,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      const uploaded = response.data.asset;
-      const inputEl = document.getElementById(`${inputId}_file`);
-      console.log("----------inputEl", inputEl);
-
-      if (inputEl && "value" in inputEl) {
-        (inputEl as HTMLInputElement).value = uploaded.uid;
-        setLoading(false);
-      }
-      setLoading(false);
-    } catch (err: any) {
-      setLoading(false);
-      console.error("Upload failed:", err);
-    }
-  };
-
+ 
   const handleSubmit = async (isPublish: boolean) => {
     try {
       const data: Record<string, any> = {};
@@ -682,6 +639,7 @@ const [ready, setReady] = useState(false);
                             setSelectedAssetData={(asset: Asset) =>
                               getAssetFromPicker(field?.uid, asset)
                             }
+                            jwt={jwt}
                           />
 
                           {/* Hidden input to hold the selected asset URL */}

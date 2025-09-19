@@ -80,8 +80,8 @@ export default async function handler(req: any, res: any) {
 
   const OPENAI_KEY = process.env.OPENAI_API_KEY as string;
   const GEMINI_KEY = process.env.GEMINI_API_KEY as string;
-  const CUSTOM_BOT_KEY = process.env.CUSTOM_BOT_KEY as string;
-  const CUSTOM_BOT_ENDPOINT = process.env.CUSTOM_BOT_ENDPOINT as string;
+  const CUSTOM_BOT_KEY = process.env.CUSTOM_BOT_API_KEY as string;
+  const CUSTOM_BOT_ENDPOINT = process.env.CUSTOM_BOT_END_POINT as string;
 
   const form = new IncomingForm({
     uploadDir: uploadsDir,

@@ -1,13 +1,11 @@
-// components/FolderTree.tsx
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { ChevronLeftIcon, X, Check, UploadCloud } from "lucide-react";
 import {
   uploadAsset,
-  fetchAssets,
   createFolder,
-} from "../../helper/AssestPickerAPI";
-import { Asset } from "./AssestPickerModel";
+} from "../../helper/AssetPickerAPI";
+import { Asset } from "./AssetPickerModel";
 
 type Props = {
   data: Asset[];
@@ -15,15 +13,18 @@ type Props = {
   isUploadNew?: boolean;
   setSelectedAssetData: (asset: Asset) => void;
   setSelectedAsset: (asset: Asset | null) => void;
+  jwt: string;
 };
 
-const FolderTree = ({
+const AssestPickerUpload = ({
   data,
   onSelectAsset,
   isUploadNew,
   setSelectedAssetData,
   setSelectedAsset,
+  jwt
 }: Props) => {
+  console.log("JWT in AssetPickerUpload:", jwt);
   const [currentParentUid, setCurrentParentUid] = useState<string | null>(null);
   const [currentItems, setCurrentItems] = useState<Asset[]>([]);
   const [history] = useState<string[]>([]);
@@ -44,7 +45,7 @@ const FolderTree = ({
       return;
     setUploading(true);
     lastUploadedFileRef.current = file.name;
-    const data = await uploadAsset(file, currentParentUid);
+    const data = await uploadAsset(jwt,file, currentParentUid);
     // await fetchAssets();
     setSelectedAssetData(data);
     setSelectedAsset(data?.asset);
@@ -86,7 +87,7 @@ const FolderTree = ({
                   <button
                     type="button"
                     onClick={() => {
-                      createFolder(newFolderName);
+                      createFolder(jwt,newFolderName);
                       setIsAddingFolder(false);
                     }}
                   >
@@ -161,4 +162,4 @@ const FolderTree = ({
   );
 };
 
-export default FolderTree;
+export default AssestPickerUpload;

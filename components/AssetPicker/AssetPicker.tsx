@@ -1,14 +1,16 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import FolderTree from "./FolderTree";
-import { fetchAssets, fetchFolders } from "../../helper/AssestPickerAPI";
-import { Asset } from "./AssestPickerModel";
+import AssestPickerUpload from "./AssetPickerUpload";
+import { fetchAssets, fetchFolders } from "../../helper/AssetPickerAPI";
+import { Asset } from "./AssetPickerModel";
 import { CircleMinus } from "lucide-react";
 type Props = {
   setSelectedAssetData: (asset: Asset) => void;
+  jwt: string;
 };
 
-const AssetPicker = ({ setSelectedAssetData }: Props) => {
+const AssetPicker = ({ setSelectedAssetData, jwt }: Props) => {
+  console.log("JWT in AssetPicker:", jwt);
   const [showModal, setShowModal] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [folders, setFolders] = useState<Asset[]>([]);
@@ -17,8 +19,8 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
 
   useEffect(() => {
     if (showModal) {
-      fetchAssets().then(setAssets);
-      fetchFolders().then(setFolders);
+      fetchAssets(jwt).then(setAssets);
+      fetchFolders(jwt).then(setFolders);
     }
   }, [showModal]);
 
@@ -97,12 +99,13 @@ const AssetPicker = ({ setSelectedAssetData }: Props) => {
             <h3 className="font-bold text-lg mb-4">
               {uploadMode ? "Upload Assets" : "Select Assets"}
             </h3>
-            <FolderTree
+            <AssestPickerUpload
               data={uploadMode ? folders : assets}
               isUploadNew={uploadMode}
               onSelectAsset={handleSelect}
               setSelectedAssetData={setSelectedAssetData}
               setSelectedAsset={setSelectedAsset}
+              jwt={jwt}
             />
           </div>
         </div>
