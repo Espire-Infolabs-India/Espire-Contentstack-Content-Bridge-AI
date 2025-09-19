@@ -1,15 +1,35 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { NextApiRequest, NextApiResponse } from "next";
-import { getStackInfo } from "../../helper/get-stack-details";
+import { verifyJwt } from "../../helper/jwt";
+import { ConfigPayload } from "../../helper/PropTypes";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const contentName = req?.query?.content_name as string;
-  const stackData = await getStackInfo();
-  const api_key = stackData?.apiKey as string;
-  const authorization = stackData?.deliveryToken as string;
+
+  // Get JWT from Authorization header
+  const authHeader = req.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  // Verify JWT and get payload
+  let stackData: ConfigPayload;
+  try {
+    stackData = verifyJwt(token); // returns payload containing apiKey, deliveryToken, etc.
+  } catch (err: any) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+  const api_key = stackData?.apiKey;
+  const authorization = stackData?.cmaToken;
+
+  if (!api_key || !authorization) {
+    return res.status(400).json({ error: "Missing stack info in JWT" });
+  }
+
   if (!contentName) {
     return res
       .status(400)

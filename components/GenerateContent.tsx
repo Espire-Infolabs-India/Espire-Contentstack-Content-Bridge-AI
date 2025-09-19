@@ -6,14 +6,14 @@ import Settings from "./Settings";
 import AssetPicker from "./AssestPicker/AssetPicker";
 import { Asset } from "./AssestPicker/AssestPickerModel";
 import { fetchAllContentTypes } from "../helper/GenerateContentAPI";
+import { ConfigPayload } from "../helper/PropTypes";
 
-interface FormField {
-  name: string;
-  value: string;
+interface GenerateContentProps {
+  isDataLoaded: boolean;
+  jwt: string;
 }
 
-export default function GenerateContent({isDataLoaded} : {isDataLoaded: boolean}) {
-  console.log("isDataLoaded", isDataLoaded);
+export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -45,18 +45,16 @@ const [ready, setReady] = useState(false);
 
 
   // helper delay fn
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 
   useEffect(() => {
     if (!isDataLoaded) return;
 
     const fetchData = async () => {
-      console.log("⏳ Waiting 10s before fetching content types...");
-      await delay(10000);
 
-      try {
+ try {
         setBaseUrl(window?.location?.origin);
-        const res = await fetchAllContentTypes();
+        const res = await fetchAllContentTypes(jwt);
         setContentTypeResult(res);
         setReady(true); // ✅ show actual content only after fetch done
       } catch (err) {
@@ -144,8 +142,6 @@ const [ready, setReady] = useState(false);
     setAIModel((e.target as HTMLInputElement).value);
   };
 
-
-
   const handleFileSelect = (file: File) => {
     if (url.trim()) {
       //alert("You can't upload a file when a URL is provided.");
@@ -232,6 +228,9 @@ const [ready, setReady] = useState(false);
         `${window?.location?.origin}/api/generate-summary`,
         {
           method: "POST",
+           headers: {
+          Authorization: `Bearer ${jwt}`, // ✅ pass JWT to API
+        },
           body: formData,
         }
       );

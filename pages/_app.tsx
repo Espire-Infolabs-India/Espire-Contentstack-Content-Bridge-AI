@@ -17,6 +17,7 @@ import "@contentstack/live-preview-utils/dist/main.css";
 import { Props } from "../typescript/pages";
 import { useState, useEffect } from "react";
 import { SafeStackInfo, getStackInfo } from "../helper/get-stack-details";
+import { JwtProvider } from "../components/JwtContext";
 
 const theme = createTheme({
   palette: {
@@ -107,12 +108,14 @@ function MyApp(props: Props) {
           <h3>Region from APP: {stackData.appRegion}</h3>
         </>
       )} */}
+       <JwtProvider>
       <Layout page={page} blogList={blogList}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <Component {...pageProps} />
         </ThemeProvider>
       </Layout>
+      </JwtProvider>
     </>
   );
 }

@@ -1,24 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
-import { getServerStack } from "./set-stack-info";
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { verifyJwt } from "../../helper/jwt";
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { include_global_field_schema = "true" } = req.query;
-    console.log("⏳ Waiting 10 seconds before getting stack info...");
-    await delay(10000);
-    const stack = getServerStack();
-    console.log("Stack info in get-content-types API:", stack);
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer "))
+      return res.status(401).json({ error: "No token provided" });
 
-    if (!stack) {
-  return res.status(400).json({ error: "Stack info not set yet. Please POST stack info first." });
-}
-    if (!stack?.apiKey || !stack?.cmaToken) {
-      console.error("❌ Stack info missing:", stack);
-      return res.status(400).json({ error: "Missing stack info (apiKey or cmaToken)" });
-    }
+    const token = authHeader.split(" ")[1];
+    const stack = verifyJwt(token); 
 
-    const url = `https://api.contentstack.io/v3/content_types?include_global_field_schema=${include_global_field_schema}`;
+    if (!stack?.apiKey || !stack?.cmaToken)
+      return res.status(400).json({ error: "Missing stack info in JWT" });
+
+    const includeGlobal = req.query.include_global_field_schema ?? "true";
+    const url = `https://api.contentstack.io/v3/content_types?include_global_field_schema=${includeGlobal}`;
     const response = await axios.get(url, {
       headers: {
         api_key: stack.apiKey,
