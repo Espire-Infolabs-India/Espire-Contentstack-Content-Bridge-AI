@@ -26,48 +26,46 @@ export const createFolder = async (jwt: string, name: string) => {
   );
 };
 
-export const uploadAsset = async (
-  jwt: string,
-  file: File,
-  parent_uid: string
-) => {
+// export const uploadAsset = async (
+//   jwt: string,
+//   file: File,
+//   parent_uid: string
+// ) => {
+//   const formData = new FormData();
+//   formData.append("asset[upload]", file);
+//   formData.append("asset[title]", file.name);
+//   formData.append("asset[parent_uid]", parent_uid);
+
+//   const res = await fetch("https://api.contentstack.io/v3/assets", {
+//     method: "POST",
+//     headers: { Authorization: `Bearer ${jwt}` },
+//     body: formData,
+//   });
+
+//   return res.json();
+// };
+
+export const uploadAsset = async (jwt: string, file: File, parent_uid: string) => {
   const formData = new FormData();
   formData.append("asset[upload]", file);
   formData.append("asset[title]", file.name);
   formData.append("asset[parent_uid]", parent_uid);
 
-  const res = await fetch("https://api.contentstack.io/v3/assets", {
+  const res = await fetch("/api/upload-asset", {
     method: "POST",
-    headers: { Authorization: `Bearer ${jwt}` },
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+    },
     body: formData,
   });
 
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error?.error || "Failed to upload asset");
+  }
+
   return res.json();
 };
-
-
-// export const uploadAsset = async (jwt: string, file: File, parent_uid: string) => {
-//   const formData = new FormData();
-//   formData.append("asset[upload]", file);           // file itself
-//   formData.append("asset[title]", file.name);      // file title
-//   formData.append("asset[parent_uid]", parent_uid);
-
-//   const res = await fetch("/api/upload-asset", {
-//     method: "POST",
-//     headers: {
-//       Authorization: `Bearer ${jwt}`, // JWT for verifying stack
-//     },
-//     body: formData,
-//   });
-
-//   if (!res.ok) {
-//     const error = await res.json();
-//     throw new Error(error?.error || "Failed to upload asset");
-//   }
-
-//   return res.json();
-// };
-
 
 
 

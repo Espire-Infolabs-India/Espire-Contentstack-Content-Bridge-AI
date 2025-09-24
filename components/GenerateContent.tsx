@@ -5,7 +5,7 @@ import axios from "axios";
 import Settings from "./Settings";
 import AssetPicker from "./AssetPicker/AssetPicker";
 import { Asset } from "./AssetPicker/AssetPickerModel";
-import { fetchAllContentTypes } from "../helper/GenerateContentAPI";
+import { fetchAllContentTypes } from "../helper/CommonAPI";
 import { ConfigPayload } from "../helper/PropTypes";
 
 interface GenerateContentProps {
