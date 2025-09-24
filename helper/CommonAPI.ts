@@ -26,26 +26,11 @@ export const createFolder = async (jwt: string, name: string) => {
   );
 };
 
-// export const uploadAsset = async (
-//   jwt: string,
-//   file: File,
-//   parent_uid: string
-// ) => {
-//   const formData = new FormData();
-//   formData.append("asset[upload]", file);
-//   formData.append("asset[title]", file.name);
-//   formData.append("asset[parent_uid]", parent_uid);
-
-//   const res = await fetch("https://api.contentstack.io/v3/assets", {
-//     method: "POST",
-//     headers: { Authorization: `Bearer ${jwt}` },
-//     body: formData,
-//   });
-
-//   return res.json();
-// };
-
-export const uploadAsset = async (jwt: string, file: File, parent_uid: string) => {
+export const uploadAsset = async (
+  jwt: string,
+  file: File,
+  parent_uid: string
+) => {
   const formData = new FormData();
   formData.append("asset[upload]", file);
   formData.append("asset[title]", file.name);
@@ -66,8 +51,6 @@ export const uploadAsset = async (jwt: string, file: File, parent_uid: string) =
 
   return res.json();
 };
-
-
 
 //Fetch Content Types
 export const fetchAllContentTypes = async (jwt: string): Promise<any[]> => {
