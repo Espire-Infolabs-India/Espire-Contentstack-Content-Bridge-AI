@@ -4,7 +4,7 @@ import { ChevronLeftIcon, X, Check, UploadCloud } from "lucide-react";
 import {
   uploadAsset,
   createFolder,
-} from "../../helper/AssetPickerAPI";
+} from "../../helper/CommonAPI";
 import { Asset } from "./AssetPickerModel";
 
 type Props = {

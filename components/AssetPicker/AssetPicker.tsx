@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import AssestPickerUpload from "./AssetPickerUpload";
-import { fetchAssets, fetchFolders } from "../../helper/AssetPickerAPI";
+import { fetchAssets, fetchFolders } from "../../helper/CommonAPI";
 import { Asset } from "./AssetPickerModel";
 import { CircleMinus } from "lucide-react";
 type Props = {
