@@ -46,6 +46,31 @@ export const uploadAsset = async (
 };
 
 
+// export const uploadAsset = async (jwt: string, file: File, parent_uid: string) => {
+//   const formData = new FormData();
+//   formData.append("asset[upload]", file);           // file itself
+//   formData.append("asset[title]", file.name);      // file title
+//   formData.append("asset[parent_uid]", parent_uid);
+
+//   const res = await fetch("/api/upload-asset", {
+//     method: "POST",
+//     headers: {
+//       Authorization: `Bearer ${jwt}`, // JWT for verifying stack
+//     },
+//     body: formData,
+//   });
+
+//   if (!res.ok) {
+//     const error = await res.json();
+//     throw new Error(error?.error || "Failed to upload asset");
+//   }
+
+//   return res.json();
+// };
+
+
+
+
 //Fetch Content Types
 export const fetchAllContentTypes = async (jwt: string): Promise<any[]> => {
   try {
