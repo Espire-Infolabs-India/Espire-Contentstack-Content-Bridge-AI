@@ -44,7 +44,7 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
   const [baseUrl, setBaseUrl] = useState<string>("");
   const [isModalOpen, setModalOpen] = useState(false);
   const [assetMap, setAssetMap] = useState<{ [uid: string]: Asset }>({});
-const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(false);
 
 
 
@@ -56,7 +56,7 @@ const [ready, setReady] = useState(false);
 
     const fetchData = async () => {
 
- try {
+      try {
         setBaseUrl(window?.location?.origin);
         const res = await fetchAllContentTypes(jwt);
         setContentTypeResult(res);
@@ -80,7 +80,7 @@ const [ready, setReady] = useState(false);
 
 
 
-     if (!isDataLoaded || !ready) {
+  if (!isDataLoaded || !ready) {
     // Render a loading state while stack info is not set
     return (
       <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
@@ -186,7 +186,7 @@ const [ready, setReady] = useState(false);
     if (file) handleFileSelect(file);
   };
 
- 
+
   const generateContent = async (e: React.SyntheticEvent) => {
     if (!template) {
       setErrorAlert("Please select a content type.");
@@ -232,9 +232,9 @@ const [ready, setReady] = useState(false);
         `${window?.location?.origin}/api/generate-summary`,
         {
           method: "POST",
-           headers: {
-          Authorization: `Bearer ${jwt}`, // ✅ pass JWT to API
-        },
+          headers: {
+            Authorization: `Bearer ${jwt}`, // ✅ pass JWT to API
+          },
           body: formData,
         }
       );
@@ -282,7 +282,7 @@ const [ready, setReady] = useState(false);
     }
   };
 
- 
+
   const handleSubmit = async (isPublish: boolean) => {
     try {
       const data: Record<string, any> = {};
@@ -422,11 +422,11 @@ const [ready, setReady] = useState(false);
           }
           component[parentUid][name] = content;
         }
-      });   
-      
-      data["site_configuration"]= {"site_section":"Site-1"};
+      });
+
+      data["site_configuration"] = { "site_section": "Site-1" };
       data.page_components = componentData;
-      
+
       // console.log('sample data:',data);
       // return false;
 
@@ -456,8 +456,8 @@ const [ready, setReady] = useState(false);
         result?.errors
           ? setErrorAlert(JSON.stringify(result?.errors))
           : setErrorAlert(
-              "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
-            );
+            "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
+          );
         window.scrollTo({ top: 0, behavior: "smooth" });
         window.setTimeout(() => {
           let errorAlertEl = document.getElementById(
@@ -589,23 +589,22 @@ const [ready, setReady] = useState(false);
                             <option value="">Choose...</option>
                             {field?.enum?.choices?.map(
                               (ele: any, ind: number) => (
-                                  <option key={ind} value={ele?.value}>
-                                    {ele?.value}
-                                  </option>
-                                )
+                                <option key={ind} value={ele?.value}>
+                                  {ele?.value}
+                                </option>
+                              )
                             )}
                           </select>
                         </div>
                       );
-                    }else if (field?.data_type === "text") {
+                    } else if (field?.data_type === "text") {
                       return (
                         <div
                           key={field?.uid ?? parentUid}
-                          className={`mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg ${
-                            field?.is_root === true && field?.uid === "url"
+                          className={`mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg ${field?.is_root === true && field?.uid === "url"
                               ? "hidden"
                               : ""
-                          }`}
+                            }`}
                         >
                           <div className="label-bar">
                             <label htmlFor={field?.uid} className="mb-2 pl-2">
