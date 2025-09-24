@@ -50,7 +50,6 @@ export const JwtProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const { token } = await resp.json();
-      console.log("Fetched JWT:", token);
       setJwt(token);
 
       // Refresh JWT before expiry

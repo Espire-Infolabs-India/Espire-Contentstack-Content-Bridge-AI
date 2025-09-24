@@ -7,6 +7,7 @@ import AssetPicker from "./AssetPicker/AssetPicker";
 import { Asset } from "./AssetPicker/AssetPickerModel";
 import { fetchAllContentTypes } from "../helper/CommonAPI";
 import { ConfigPayload } from "../helper/PropTypes";
+import { decodeJwt } from "../helper/jwt";
 
 interface GenerateContentProps {
   isDataLoaded: boolean;
@@ -15,6 +16,9 @@ interface GenerateContentProps {
 
 export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentProps) {
 
+  const stackData = decodeJwt(jwt);
+
+  console.log("Stack Data:", stackData);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");

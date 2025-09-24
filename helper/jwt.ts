@@ -22,3 +22,16 @@ export const issueJwt = (payload: object) => {
 export const verifyJwt = <T = any>(token: string): T => {
   return jwt.verify(token, getSecret()) as T;
 };
+
+
+export const decodeJwt = <T = any>(token: string): T | null => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = atob(base64);
+    return JSON.parse(decoded) as T;
+  } catch (err) {
+    console.error("❌ JWT decode failed:", err);
+    return null;
+  }
+};
