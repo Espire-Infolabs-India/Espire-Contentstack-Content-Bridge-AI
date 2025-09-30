@@ -333,7 +333,7 @@ export default function GenerateContent({
 
       // collect dropdown values
       const formDropdowns =
-        document.querySelectorAll<HTMLSelectElement>(".form-dropdown");
+        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown");
       formDropdowns.forEach((dropdown) => {
         const id = dropdown.id;
         const name = dropdown.name;
@@ -369,9 +369,8 @@ export default function GenerateContent({
       });
 
       // normal dropdowns
-      const formDropdownsNormal = document.querySelectorAll<HTMLSelectElement>(
-        ".form-dropdown-normal"
-      );
+      const formDropdownsNormal =
+        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
       formDropdownsNormal.forEach((dropdown) => {
         const name = dropdown.name;
         const value = dropdown.value.trim();
@@ -410,12 +409,15 @@ export default function GenerateContent({
       setLoading(true);
 
       // ✅ Call your new API
-      const response = await fetch("/api/contentstack/handleSubmit", {
+      const response = await fetch("/api/handleSubmit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ template, entryData: data }),
       });
-
+      console.log("check data", response);
       const result = await response.json();
 
       if (!response.ok) {
@@ -428,9 +430,12 @@ export default function GenerateContent({
 
       const entryId = result?.entry?.uid;
       if (isPublish && entryId) {
-        await fetch("/api/contentstack/publishEntry", {
+        await fetch("/api/publishEntry", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ template, entryUid: entryId }),
         });
       }
