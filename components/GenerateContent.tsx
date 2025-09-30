@@ -14,8 +14,10 @@ interface GenerateContentProps {
   jwt: string;
 }
 
-export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentProps) {
-
+export default function GenerateContent({
+  isDataLoaded,
+  jwt,
+}: GenerateContentProps) {
   const stackData = decodeJwt(jwt);
 
   console.log("Stack Data:", stackData);
@@ -46,16 +48,12 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
   const [assetMap, setAssetMap] = useState<{ [uid: string]: Asset }>({});
   const [ready, setReady] = useState(false);
 
-
-
   // helper delay fn
-
 
   useEffect(() => {
     if (!isDataLoaded) return;
 
     const fetchData = async () => {
-
       try {
         setBaseUrl(window?.location?.origin);
         const res = await fetchAllContentTypes(jwt);
@@ -68,6 +66,16 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
 
     fetchData();
   }, [isDataLoaded]);
+
+  if (!isDataLoaded || !ready) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
+        We are making things ready for you...
+      </div>
+    );
+  }
+
+
 
 
   if (!isDataLoaded || !ready) {
@@ -176,7 +184,6 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
     if (file) handleFileSelect(file);
   };
 
-
   const generateContent = async (e: React.SyntheticEvent) => {
     if (!template) {
       setErrorAlert("Please select a content type.");
@@ -272,41 +279,43 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
     }
   };
 
-
   const handleSubmit = async (isPublish: boolean) => {
     try {
       const data: Record<string, any> = {};
       const componentData: Array<Record<string, any>> = [];
 
+      // collect values from form textareas
       const textareas =
         document.querySelectorAll<HTMLTextAreaElement>(".form-textarea");
       textareas.forEach((textarea) => {
-        let name = textarea.name;
-        let value = textarea.value.trim();
-        let parentUid = textarea.getAttribute("data-parent-uid") as string;
-        let parentToUid = textarea.getAttribute("data-parent-to-uid") as string;
-        let isRoot = textarea.getAttribute("data-is-root") as string;
+        const name = textarea.name;
+        const value = textarea.value.trim();
+        const parentUid = textarea.getAttribute("data-parent-uid") as string;
+        const parentToUid = textarea.getAttribute(
+          "data-parent-to-uid"
+        ) as string;
+        const isRoot = textarea.getAttribute("data-is-root") as string;
 
         if (!name || !value) return;
 
-        if (isRoot == "true" && !parentToUid) {
-          if (name == "url") {
-            if (template == "_technical_solution") {
+        if (isRoot === "true" && !parentToUid) {
+          if (name === "url") {
+            if (template === "_technical_solution") {
               data[name] = `/technical-offerings/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
                 ?.toLowerCase()}`;
-            } else if (template == "_case_study") {
+            } else if (template === "_case_study") {
               data[name] = `/case-study/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
                 ?.toLowerCase()}`;
-            } else if (template == "blog_post") {
+            } else if (template === "blog_post") {
               data[name] = `/blog/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
                 ?.toLowerCase()}`;
-            } else if (template == "page") {
+            } else if (template === "page") {
               data[name] = `/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
@@ -320,11 +329,8 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
           } else {
             data[name] = value;
           }
-        } else if (isRoot == "true" && parentToUid != "") {
-          if (!data[parentToUid]) {
-            data[parentToUid] = {};
-          }
-
+        } else if (isRoot === "true" && parentToUid) {
+          if (!data[parentToUid]) data[parentToUid] = {};
           data[parentToUid][name] = value;
         } else if (parentUid) {
           let existing = componentData.find((comp: any) => comp[parentUid]);
@@ -336,35 +342,32 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
         }
       });
 
+      // collect dropdown values
       const formDropdowns =
-        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown");
-
+        document.querySelectorAll<HTMLSelectElement>(".form-dropdown");
       formDropdowns.forEach((dropdown) => {
-        let id = dropdown.id;
-        let name = dropdown.name;
-        let value = dropdown.value.trim();
-        let parentUid = dropdown.getAttribute("data-parent-uid") as string;
-        let parentToUid = dropdown.getAttribute("data-parent-to-uid") as string;
-        let isRoot = dropdown.getAttribute("data-is-root") as string;
+        const id = dropdown.id;
+        const name = dropdown.name;
+        const value = dropdown.value.trim();
+        const parentUid = dropdown.getAttribute("data-parent-uid") as string;
+        const parentToUid = dropdown.getAttribute(
+          "data-parent-to-uid"
+        ) as string;
+        const isRoot = dropdown.getAttribute("data-is-root") as string;
 
         if (!name || !value) return;
-
         const content = [{ uid: value, _content_type_uid: id }];
 
-        if (isRoot == "true" && !parentToUid) {
+        if (isRoot === "true" && !parentToUid) {
           data[name] = content;
-        } else if (isRoot == "true" && parentToUid != "") {
+        } else if (isRoot === "true" && parentToUid) {
           let component = componentData.find((comp) => comp[parentUid]);
-
           if (!component) {
             component = { [parentUid]: { [parentToUid]: {} } };
             componentData.push(component);
           }
-
-          // If parentToUid object doesn't exist inside parentUid, initialize it
-          if (!component[parentUid][parentToUid]) {
+          if (!component[parentUid][parentToUid])
             component[parentUid][parentToUid] = {};
-          }
           component[parentUid][parentToUid][name] = content;
         } else if (!isRoot && parentUid) {
           let component = componentData.find((comp) => comp[parentUid]);
@@ -376,157 +379,85 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
         }
       });
 
-
-      const formDropdownsNormal = document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
+      // normal dropdowns
+      const formDropdownsNormal = document.querySelectorAll<HTMLSelectElement>(
+        ".form-dropdown-normal"
+      );
       formDropdownsNormal.forEach((dropdown) => {
-        let id = dropdown.id;
-        let name = dropdown.name;
-        let value = dropdown.value.trim();
-        let parentUid = dropdown.getAttribute("data-parent-uid") as string;
-        let parentToUid = dropdown.getAttribute("data-parent-to-uid") as string;
-        let isRoot = dropdown.getAttribute("data-is-root") as string;
+        const name = dropdown.name;
+        const value = dropdown.value.trim();
+        const parentUid = dropdown.getAttribute("data-parent-uid") as string;
+        const parentToUid = dropdown.getAttribute(
+          "data-parent-to-uid"
+        ) as string;
+        const isRoot = dropdown.getAttribute("data-is-root") as string;
 
         if (!name || !value) return;
-        const content = value; //[{ uid: value, _content_type_uid: id }];
 
-        if (isRoot == "true" && !parentToUid) {
-          data[name] = content;
-        } else if (isRoot == "true" && parentToUid != "") {
+        if (isRoot === "true" && !parentToUid) {
+          data[name] = value;
+        } else if (isRoot === "true" && parentToUid) {
           let component = componentData.find((comp) => comp[parentUid]);
-
           if (!component) {
             component = { [parentUid]: { [parentToUid]: {} } };
             componentData.push(component);
           }
-
-          // If parentToUid object doesn't exist inside parentUid, initialize it
-          if (!component[parentUid][parentToUid]) {
+          if (!component[parentUid][parentToUid])
             component[parentUid][parentToUid] = {};
-          }
-          component[parentUid][parentToUid][name] = content;
+          component[parentUid][parentToUid][name] = value;
         } else if (!isRoot && parentUid) {
           let component = componentData.find((comp) => comp[parentUid]);
           if (!component) {
             component = { [parentUid]: {} };
             componentData.push(component);
           }
-          component[parentUid][name] = content;
+          component[parentUid][name] = value;
         }
       });
 
-      data["site_configuration"] = { "site_section": "Site-1" };
+      data["site_configuration"] = { site_section: "Site-1" };
       data.page_components = componentData;
 
-      // console.log('sample data:',data);
-      // return false;
+      setLoading(true);
 
-      const myHeaders = new Headers();
-      myHeaders.append("authorization", process.env.AUTHORIZATION as string);
-      myHeaders.append("api_key", process.env.API_KEY as string);
-      myHeaders.append("Content-Type", "application/json");
-
-      const raw = JSON.stringify({ entry: { ...data } });
-
-      const requestOptions: RequestInit = {
+      // ✅ Call your new API
+      const response = await fetch("/api/contentstack/handleSubmit", {
         method: "POST",
-        headers: myHeaders,
-        body: raw,
-      };
-
-      const response = await fetch(
-        `https://api.contentstack.io/v3/content_types/${template}/entries/`,
-        requestOptions
-      );
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ template, entryData: data }),
+      });
 
       const result = await response.json();
-      if (result?.error_code == 119) {
-        result?.errors
-          ? alert(JSON.stringify(result?.errors))
-          : alert("Please enter values in required fields.");
-        result?.errors
-          ? setErrorAlert(JSON.stringify(result?.errors))
-          : setErrorAlert(
-            "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
-          );
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        window.setTimeout(() => {
-          let errorAlertEl = document.getElementById(
-            `errorAlert`
-          ) as HTMLInputElement;
-          if (errorAlertEl) {
-            errorAlertEl.style.display = "none";
-          }
-        }, 4000);
 
+      if (!response.ok) {
+        setErrorAlert(
+          JSON.stringify(result?.errors) || "Failed to create entry"
+        );
         setLoading(false);
-        return false;
-      } else {
-        let entryId = result?.entry?.uid;
-        if (isPublish) {
-          publishEntry(entryId);
-        }
-        setFinalResult(result);
-        setSucessPage(true);
-        setSuccess();
-        setResult(null);
-        setLoading(false);
+        return;
       }
+
+      const entryId = result?.entry?.uid;
+      if (isPublish && entryId) {
+        await fetch("/api/contentstack/publishEntry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ template, entryUid: entryId }),
+        });
+      }
+
+      setFinalResult(result);
+      setSucessPage(true);
+      setSuccess();
+      setResult(null);
+      setLoading(false);
     } catch (err) {
       console.error("Upload error:", err);
-      //alert(`Error: ${err}`);
       setErrorAlert(`Error: ${err}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(
-          `errorAlert`
-        ) as HTMLInputElement;
-        if (errorAlertEl) {
-          errorAlertEl.style.display = "none";
-        }
-      }, 4000);
-
       setLoading(false);
-      setSuccessMsg(false);
       setResult(null);
       setCancel();
-      //window.location.reload();
     }
-  };
-
-  // isPublish:boolean
-  const publishEntry = async (EntriyUid: string) => {
-    const myHeaders = new Headers();
-    myHeaders.append("authorization", process.env.AUTHORIZATION as string);
-    myHeaders.append("api_key", process.env.API_KEY as string);
-    myHeaders.append("Content-Type", "application/json");
-
-    const data = JSON.stringify({
-      entries: [
-        {
-          uid: EntriyUid,
-          content_type: template,
-          version: 1,
-          locale: "en-us",
-        },
-      ],
-      locales: ["en-us"],
-      environments: ["dev"],
-      publish_with_reference: true,
-      skip_workflow_stage_check: true,
-    });
-
-    const requestOptions: RequestInit = {
-      method: "POST",
-      headers: myHeaders,
-      body: data,
-    };
-
-    const response = await fetch(
-      `https://api.contentstack.io/v3/bulk/publish?x-bulk-action=publish`,
-      requestOptions
-    );
-
-    const publishingResult = await response.json();
   };
 
   const renderResult = () => {
@@ -591,10 +522,11 @@ export default function GenerateContent({ isDataLoaded, jwt }: GenerateContentPr
                       return (
                         <div
                           key={field?.uid ?? parentUid}
-                          className={`mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg ${field?.is_root === true && field?.uid === "url"
+                          className={`mb-4 bg-white border-[var(--border-color)] border-[1px] p-4 rounded-lg ${
+                            field?.is_root === true && field?.uid === "url"
                               ? "hidden"
                               : ""
-                            }`}
+                          }`}
                         >
                           <div className="label-bar">
                             <label htmlFor={field?.uid} className="mb-2 pl-2">
