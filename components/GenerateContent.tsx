@@ -68,17 +68,6 @@ export default function GenerateContent({
   }, [isDataLoaded]);
 
   if (!isDataLoaded || !ready) {
-    return (
-      <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
-        We are making things ready for you...
-      </div>
-    );
-  }
-
-
-
-
-  if (!isDataLoaded || !ready) {
     // Render a loading state while stack info is not set
     return (
       <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
