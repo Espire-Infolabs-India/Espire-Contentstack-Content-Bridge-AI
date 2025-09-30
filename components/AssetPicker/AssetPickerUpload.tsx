@@ -41,10 +41,16 @@ const AssestPickerUpload = ({
   }, [currentParentUid, data]);
 
   const handleUpload = async (file: File) => {
+
+    console.log("Inside handleUpload function" , file, currentParentUid, lastUploadedFileRef.current);
     if (!file || !currentParentUid || file.name === lastUploadedFileRef.current)
       return;
     setUploading(true);
     lastUploadedFileRef.current = file.name;
+
+    console.log("Uploading file to parent UID:", currentParentUid);
+    console.log("Using JWT for upload:", jwt);
+    console.log("File details:", file);
     const data = await uploadAsset(jwt,file, currentParentUid);
     // await fetchAssets();
     setSelectedAssetData(data);
