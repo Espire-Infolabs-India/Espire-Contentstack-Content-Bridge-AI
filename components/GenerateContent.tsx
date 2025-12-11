@@ -48,6 +48,13 @@ export default function GenerateContent({
   const [assetMap, setAssetMap] = useState<{ [uid: string]: Asset }>({});
   const [ready, setReady] = useState(false);
 
+  const [customPrompt, setCustomPrompt] = useState(
+    "Rewrite in a more engaging style."
+  );
+  const [brandWebsite, setBrandWebsite] = useState(
+    "https://www.espire.com/about-us/espire-group"
+  );
+
   // helper delay fn
 
   useEffect(() => {
@@ -207,6 +214,8 @@ export default function GenerateContent({
     const formData = new FormData();
     formData.append("template", template);
     formData.append("model", aiModel);
+    formData.append("customPrompt", customPrompt);
+    formData.append("brandWebsite", brandWebsite);
     if (selectedFile) {
       formData.append("pdf", selectedFile);
     } else if (url.trim()) {
@@ -713,7 +722,14 @@ export default function GenerateContent({
                   />
                 </svg>
               </h1>
-              <Settings model={aiModel} setAIModel={getAIModel} />
+              <Settings
+                model={aiModel}
+                setAIModel={getAIModel}
+                prompt={customPrompt}
+                setPrompt={setCustomPrompt}
+                brandWebsite={brandWebsite}
+                setBrandWebsite={setBrandWebsite}
+              />
             </div>
           </div>
         </div>

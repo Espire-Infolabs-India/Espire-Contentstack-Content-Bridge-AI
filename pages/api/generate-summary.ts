@@ -8,6 +8,7 @@ import Prompt from "../../prompts.json";
 import { getContentType } from "../../contentstack-sdk";
 import TechnicalOfferingsResponse from "../../technical-offerings-response.json";
 import { verifyJwt } from "../../helper/jwt";
+
 export const config = { api: { bodyParser: false } };
 
 const isVercel = process.env.VERCEL === "1";
@@ -87,7 +88,6 @@ export default async function handler(req: any, res: any) {
     uploadDir: uploadsDir,
     keepExtensions: true,
   });
-
   form.parse(req, async (err, fields, files) => {
     if (err)
       return res.status(500).json({ error: "Failed to parse form data" });
@@ -97,6 +97,13 @@ export default async function handler(req: any, res: any) {
       fields?.model?.toString().toLowerCase() || "gpt-3.5-turbo";
     const url = fields?.url;
     const file = Array.isArray(files.pdf) ? files.pdf[0] : files.pdf;
+    const userPrompt = Array.isArray(fields?.customPrompt)
+      ? fields.customPrompt[0]
+      : fields?.customPrompt || "";
+
+    const brandWebsite = Array.isArray(fields?.brandWebsite)
+      ? fields.brandWebsite[0]
+      : fields?.brandWebsite || "";
 
     if ((!file && !url) || (file && url)) {
       return res
@@ -226,15 +233,15 @@ export default async function handler(req: any, res: any) {
       let truncatedContent = "";
       let PDFLink = "";
       if (file?.mimetype === "application/pdf") {
-        const filePath = file?.filepath;
-        const fileName = file?.newFilename;
+        const filePath = (file as any)?.filepath;
+        const fileName = (file as any)?.newFilename;
         console.log("File path:", filePath);
         console.log("file name:", fileName);
         PDFLink = `${BASE_URL}/images/uploads/${fileName}`;
         const pdfContent = await readPDFContent(filePath);
         truncatedContent = pdfContent.slice(0, 30000);
       } else if (url) {
-        truncatedContent = Array.isArray(url) ? url[0] : url;
+        truncatedContent = Array.isArray(url) ? url[0] : (url as string);
       }
 
       const instructions = Prompt?.instructions || [];
@@ -252,16 +259,18 @@ export default async function handler(req: any, res: any) {
         ${truncatedContent}
       `;
 
+      // Final values for custom bot (from Settings or defaults)
+    
       // Generate AI output
       let finalFieldsArray: any[] = [];
+
       if (selectedModel === "custom_bot") {
         const response = await axios.post(
           CUSTOM_BOT_ENDPOINT,
           {
             blob_url: PDFLink || url,
-            user_prompt:
-              "Rewrite in a more engaging style, but maintain all important details.",
-            brand_website_url: "https://www.netgear.com/about/",
+            user_prompt: userPrompt || "Rewrite in a more engaging style.",
+            brand_website_url: brandWebsite || "",
             content_type: JSON.stringify(
               textSchemaObjects.map((f) => ({
                 display_name: f.display_name,
