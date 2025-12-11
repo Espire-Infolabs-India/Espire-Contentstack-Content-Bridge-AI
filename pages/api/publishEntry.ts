@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { verifyJwt } from "../../helper/jwt";
 
-export default async function handlerCreateFolder(
+export default async function handlerPublishEntry(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -22,8 +22,10 @@ export default async function handlerCreateFolder(
       return res.status(400).json({ error: "Missing stack info in JWT" });
     }
 
+    const { template, entryUid } = req.body;
+
     const response = await fetch(
-      `https://api.contentstack.io/v3/assets/folders`,
+      `https://api.contentstack.io/v3/bulk/publish?x-bulk-action=publish`,
       {
         method: "POST",
         headers: {
@@ -31,20 +33,33 @@ export default async function handlerCreateFolder(
           authorization: stack.cmaToken,
           "Content-Type": "application/json",
         },
-        body: req.body ? JSON.stringify(req.body) : null,
+        body: JSON.stringify({
+          entries: [
+            {
+              uid: entryUid,
+              content_type: template,
+              version: 1,
+              locale: "en-us",
+            },
+          ],
+          locales: ["en-us"],
+          environments: ["dev"],
+          publish_with_reference: true,
+          skip_workflow_stage_check: true,
+        }),
       }
     );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("❌ Contentstack error:", data);
+      console.error("❌ Contentstack publish error:", data);
       return res.status(response.status).json({ error: data });
     }
 
     res.status(200).json(data);
   } catch (err: any) {
-    console.error("❌ Error in create-folder API:", err.message);
-    res.status(500).json({ error: "Failed to create folder" });
+    console.error("❌ Error in publishEntry API:", err.message);
+    res.status(500).json({ error: "Failed to publish entry" });
   }
 }

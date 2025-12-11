@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { verifyJwt } from "../../helper/jwt";
 
-export default async function handlerCreateFolder(
+export default async function handlerHandleSubmit(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -22,8 +22,10 @@ export default async function handlerCreateFolder(
       return res.status(400).json({ error: "Missing stack info in JWT" });
     }
 
+    const { template, entryData } = req.body;
+
     const response = await fetch(
-      `https://api.contentstack.io/v3/assets/folders`,
+      `https://api.contentstack.io/v3/content_types/${template}/entries`,
       {
         method: "POST",
         headers: {
@@ -31,7 +33,7 @@ export default async function handlerCreateFolder(
           authorization: stack.cmaToken,
           "Content-Type": "application/json",
         },
-        body: req.body ? JSON.stringify(req.body) : null,
+        body: JSON.stringify({ entry: entryData }),
       }
     );
 
@@ -44,7 +46,7 @@ export default async function handlerCreateFolder(
 
     res.status(200).json(data);
   } catch (err: any) {
-    console.error("❌ Error in create-folder API:", err.message);
-    res.status(500).json({ error: "Failed to create folder" });
+    console.error("❌ Error in handleSubmit API:", err.message);
+    res.status(500).json({ error: "Failed to create entry" });
   }
 }

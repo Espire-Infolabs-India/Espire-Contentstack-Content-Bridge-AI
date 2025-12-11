@@ -3,15 +3,24 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
 import axios from "axios";
 import Settings from "./Settings";
-import AssetPicker from "./AssestPicker/AssetPicker";
-import { Asset } from "./AssestPicker/AssestPickerModel";
+import AssetPicker from "./AssetPicker/AssetPicker";
+import { Asset } from "./AssetPicker/AssetPickerModel";
+import { fetchAllContentTypes } from "../helper/CommonAPI";
+import { ConfigPayload } from "../helper/PropTypes";
+import { decodeJwt } from "../helper/jwt";
 
-interface FormField {
-  name: string;
-  value: string;
+interface GenerateContentProps {
+  isDataLoaded: boolean;
+  jwt: string;
 }
 
-export default function GenerateContent() {
+export default function GenerateContent({
+  isDataLoaded,
+  jwt,
+}: GenerateContentProps) {
+  const stackData = decodeJwt(jwt);
+
+  console.log("Stack Data:", stackData);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
@@ -36,9 +45,43 @@ export default function GenerateContent() {
   const [finalResult, setFinalResult] = useState<any>(null);
   const [baseUrl, setBaseUrl] = useState<string>("");
   const [isModalOpen, setModalOpen] = useState(false);
-
   const [assetMap, setAssetMap] = useState<{ [uid: string]: Asset }>({});
+  const [ready, setReady] = useState(false);
 
+  const [customPrompt, setCustomPrompt] = useState(
+    "Rewrite in a more engaging style."
+  );
+  const [brandWebsite, setBrandWebsite] = useState(
+    "https://www.espire.com/about-us/espire-group"
+  );
+
+  // helper delay fn
+
+  useEffect(() => {
+    if (!isDataLoaded) return;
+
+    const fetchData = async () => {
+      try {
+        setBaseUrl(window?.location?.origin);
+        const res = await fetchAllContentTypes(jwt);
+        setContentTypeResult(res);
+        setReady(true); // ✅ show actual content only after fetch done
+      } catch (err) {
+        console.error("❌ Fetch error:", err);
+      }
+    };
+
+    fetchData();
+  }, [isDataLoaded]);
+
+  if (!isDataLoaded || !ready) {
+    // Render a loading state while stack info is not set
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>
+        We are making things ready for you...
+      </div>
+    );
+  }
   const getAssetFromPicker = (uid: string, asset: Asset): void => {
     setAssetMap((prev) => ({ ...prev, [uid]: asset }));
   };
@@ -97,25 +140,6 @@ export default function GenerateContent() {
     setAIModel((e.target as HTMLInputElement).value);
   };
 
-  useEffect(() => {
-    console.log("------------------------v6.1");
-    setBaseUrl(window?.location?.origin);
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `${window?.location?.origin}/api/get-content-types`
-        );
-        if (!res.ok) throw new Error("Failed to fetch content types");
-        const data = await res.json();
-        setContentTypeResult(data);
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   const handleFileSelect = (file: File) => {
     if (url.trim()) {
       //alert("You can't upload a file when a URL is provided.");
@@ -156,7 +180,6 @@ export default function GenerateContent() {
     if (file) handleFileSelect(file);
   };
 
- 
   const generateContent = async (e: React.SyntheticEvent) => {
     if (!template) {
       setErrorAlert("Please select a content type.");
@@ -191,6 +214,8 @@ export default function GenerateContent() {
     const formData = new FormData();
     formData.append("template", template);
     formData.append("model", aiModel);
+    formData.append("customPrompt", customPrompt);
+    formData.append("brandWebsite", brandWebsite);
     if (selectedFile) {
       formData.append("pdf", selectedFile);
     } else if (url.trim()) {
@@ -202,6 +227,9 @@ export default function GenerateContent() {
         `${window?.location?.origin}/api/generate-summary`,
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${jwt}`, // ✅ pass JWT to API
+          },
           body: formData,
         }
       );
@@ -249,84 +277,43 @@ export default function GenerateContent() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoading(true);
-    const input = e.target as HTMLInputElement;
-    const inputId = input.id;
-    const file = e.target.files?.[0];
-
-    if (file) {
-      handleFileUpload(file, inputId);
-    }
-  };
-
-  const handleFileUpload = async (file: File, inputId: string) => {
-    const formData = new FormData();
-    formData.append("asset[upload]", file);
-    formData.append("asset[title]", file.name);
-
-    try {
-      const response = await axios.post(
-        "https://api.contentstack.io/v3/assets",
-        formData,
-        {
-          headers: {
-            api_key: process.env.API_KEY as string,
-            authorization: process.env.AUTHORIZATION as string,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      const uploaded = response.data.asset;
-      const inputEl = document.getElementById(`${inputId}_file`);
-      console.log("----------inputEl", inputEl);
-
-      if (inputEl && "value" in inputEl) {
-        (inputEl as HTMLInputElement).value = uploaded.uid;
-        setLoading(false);
-      }
-      setLoading(false);
-    } catch (err: any) {
-      setLoading(false);
-      console.error("Upload failed:", err);
-    }
-  };
-
   const handleSubmit = async (isPublish: boolean) => {
     try {
       const data: Record<string, any> = {};
       const componentData: Array<Record<string, any>> = [];
 
+      // collect values from form textareas
       const textareas =
         document.querySelectorAll<HTMLTextAreaElement>(".form-textarea");
       textareas.forEach((textarea) => {
-        let name = textarea.name;
-        let value = textarea.value.trim();
-        let parentUid = textarea.getAttribute("data-parent-uid") as string;
-        let parentToUid = textarea.getAttribute("data-parent-to-uid") as string;
-        let isRoot = textarea.getAttribute("data-is-root") as string;
+        const name = textarea.name;
+        const value = textarea.value.trim();
+        const parentUid = textarea.getAttribute("data-parent-uid") as string;
+        const parentToUid = textarea.getAttribute(
+          "data-parent-to-uid"
+        ) as string;
+        const isRoot = textarea.getAttribute("data-is-root") as string;
 
         if (!name || !value) return;
 
-        if (isRoot == "true" && !parentToUid) {
-          if (name == "url") {
-            if (template == "_technical_solution") {
+        if (isRoot === "true" && !parentToUid) {
+          if (name === "url") {
+            if (template === "_technical_solution") {
               data[name] = `/technical-offerings/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
                 ?.toLowerCase()}`;
-            } else if (template == "_case_study") {
+            } else if (template === "_case_study") {
               data[name] = `/case-study/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
                 ?.toLowerCase()}`;
-            } else if (template == "blog_post") {
+            } else if (template === "blog_post") {
               data[name] = `/blog/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
                 ?.toLowerCase()}`;
-            } else if (template == "page") {
+            } else if (template === "page") {
               data[name] = `/${data["title"]
                 ?.replaceAll(" ", "-")
                 ?.replaceAll("_", "-")
@@ -340,11 +327,8 @@ export default function GenerateContent() {
           } else {
             data[name] = value;
           }
-        } else if (isRoot == "true" && parentToUid != "") {
-          if (!data[parentToUid]) {
-            data[parentToUid] = {};
-          }
-
+        } else if (isRoot === "true" && parentToUid) {
+          if (!data[parentToUid]) data[parentToUid] = {};
           data[parentToUid][name] = value;
         } else if (parentUid) {
           let existing = componentData.find((comp: any) => comp[parentUid]);
@@ -356,35 +340,32 @@ export default function GenerateContent() {
         }
       });
 
+      // collect dropdown values
       const formDropdowns =
         document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown");
-
       formDropdowns.forEach((dropdown) => {
-        let id = dropdown.id;
-        let name = dropdown.name;
-        let value = dropdown.value.trim();
-        let parentUid = dropdown.getAttribute("data-parent-uid") as string;
-        let parentToUid = dropdown.getAttribute("data-parent-to-uid") as string;
-        let isRoot = dropdown.getAttribute("data-is-root") as string;
+        const id = dropdown.id;
+        const name = dropdown.name;
+        const value = dropdown.value.trim();
+        const parentUid = dropdown.getAttribute("data-parent-uid") as string;
+        const parentToUid = dropdown.getAttribute(
+          "data-parent-to-uid"
+        ) as string;
+        const isRoot = dropdown.getAttribute("data-is-root") as string;
 
         if (!name || !value) return;
-
         const content = [{ uid: value, _content_type_uid: id }];
 
-        if (isRoot == "true" && !parentToUid) {
+        if (isRoot === "true" && !parentToUid) {
           data[name] = content;
-        } else if (isRoot == "true" && parentToUid != "") {
+        } else if (isRoot === "true" && parentToUid) {
           let component = componentData.find((comp) => comp[parentUid]);
-
           if (!component) {
             component = { [parentUid]: { [parentToUid]: {} } };
             componentData.push(component);
           }
-
-          // If parentToUid object doesn't exist inside parentUid, initialize it
-          if (!component[parentUid][parentToUid]) {
+          if (!component[parentUid][parentToUid])
             component[parentUid][parentToUid] = {};
-          }
           component[parentUid][parentToUid][name] = content;
         } else if (!isRoot && parentUid) {
           let component = componentData.find((comp) => comp[parentUid]);
@@ -396,157 +377,90 @@ export default function GenerateContent() {
         }
       });
 
-
-      const formDropdownsNormal = document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
+      // normal dropdowns
+      const formDropdownsNormal =
+        document.querySelectorAll<HTMLTextAreaElement>(".form-dropdown-normal");
       formDropdownsNormal.forEach((dropdown) => {
-        let id = dropdown.id;
-        let name = dropdown.name;
-        let value = dropdown.value.trim();
-        let parentUid = dropdown.getAttribute("data-parent-uid") as string;
-        let parentToUid = dropdown.getAttribute("data-parent-to-uid") as string;
-        let isRoot = dropdown.getAttribute("data-is-root") as string;
+        const name = dropdown.name;
+        const value = dropdown.value.trim();
+        const parentUid = dropdown.getAttribute("data-parent-uid") as string;
+        const parentToUid = dropdown.getAttribute(
+          "data-parent-to-uid"
+        ) as string;
+        const isRoot = dropdown.getAttribute("data-is-root") as string;
 
         if (!name || !value) return;
-        const content = value; //[{ uid: value, _content_type_uid: id }];
 
-        if (isRoot == "true" && !parentToUid) {
-          data[name] = content;
-        } else if (isRoot == "true" && parentToUid != "") {
+        if (isRoot === "true" && !parentToUid) {
+          data[name] = value;
+        } else if (isRoot === "true" && parentToUid) {
           let component = componentData.find((comp) => comp[parentUid]);
-
           if (!component) {
             component = { [parentUid]: { [parentToUid]: {} } };
             componentData.push(component);
           }
-
-          // If parentToUid object doesn't exist inside parentUid, initialize it
-          if (!component[parentUid][parentToUid]) {
+          if (!component[parentUid][parentToUid])
             component[parentUid][parentToUid] = {};
-          }
-          component[parentUid][parentToUid][name] = content;
+          component[parentUid][parentToUid][name] = value;
         } else if (!isRoot && parentUid) {
           let component = componentData.find((comp) => comp[parentUid]);
           if (!component) {
             component = { [parentUid]: {} };
             componentData.push(component);
           }
-          component[parentUid][name] = content;
+          component[parentUid][name] = value;
         }
-      });   
-      
-      data["site_configuration"]= {"site_section":"Site-1"};
+      });
+
+      data["site_configuration"] = { site_section: "Site-1" };
       data.page_components = componentData;
-      
-      // console.log('sample data:',data);
-      // return false;
 
-      const myHeaders = new Headers();
-      myHeaders.append("authorization", process.env.AUTHORIZATION as string);
-      myHeaders.append("api_key", process.env.API_KEY as string);
-      myHeaders.append("Content-Type", "application/json");
+      setLoading(true);
 
-      const raw = JSON.stringify({ entry: { ...data } });
-
-      const requestOptions: RequestInit = {
+      // ✅ Call your new API
+      const response = await fetch("/api/handleSubmit", {
         method: "POST",
-        headers: myHeaders,
-        body: raw,
-      };
-
-      const response = await fetch(
-        `https://api.contentstack.io/v3/content_types/${template}/entries/`,
-        requestOptions
-      );
-
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ template, entryData: data }),
+      });
+      console.log("check data", response);
       const result = await response.json();
-      if (result?.error_code == 119) {
-        result?.errors
-          ? alert(JSON.stringify(result?.errors))
-          : alert("Please enter values in required fields.");
-        result?.errors
-          ? setErrorAlert(JSON.stringify(result?.errors))
-          : setErrorAlert(
-              "We're currently experiencing heavy traffic. Please try again in 5 to 15 minutes."
-            );
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        window.setTimeout(() => {
-          let errorAlertEl = document.getElementById(
-            `errorAlert`
-          ) as HTMLInputElement;
-          if (errorAlertEl) {
-            errorAlertEl.style.display = "none";
-          }
-        }, 4000);
 
+      if (!response.ok) {
+        setErrorAlert(
+          JSON.stringify(result?.errors) || "Failed to create entry"
+        );
         setLoading(false);
-        return false;
-      } else {
-        let entryId = result?.entry?.uid;
-        if (isPublish) {
-          publishEntry(entryId);
-        }
-        setFinalResult(result);
-        setSucessPage(true);
-        setSuccess();
-        setResult(null);
-        setLoading(false);
+        return;
       }
+
+      const entryId = result?.entry?.uid;
+      if (isPublish && entryId) {
+        await fetch("/api/publishEntry", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ template, entryUid: entryId }),
+        });
+      }
+
+      setFinalResult(result);
+      setSucessPage(true);
+      setSuccess();
+      setResult(null);
+      setLoading(false);
     } catch (err) {
       console.error("Upload error:", err);
-      //alert(`Error: ${err}`);
       setErrorAlert(`Error: ${err}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      window.setTimeout(() => {
-        let errorAlertEl = document.getElementById(
-          `errorAlert`
-        ) as HTMLInputElement;
-        if (errorAlertEl) {
-          errorAlertEl.style.display = "none";
-        }
-      }, 4000);
-
       setLoading(false);
-      setSuccessMsg(false);
       setResult(null);
       setCancel();
-      //window.location.reload();
     }
-  };
-
-  // isPublish:boolean
-  const publishEntry = async (EntriyUid: string) => {
-    const myHeaders = new Headers();
-    myHeaders.append("authorization", process.env.AUTHORIZATION as string);
-    myHeaders.append("api_key", process.env.API_KEY as string);
-    myHeaders.append("Content-Type", "application/json");
-
-    const data = JSON.stringify({
-      entries: [
-        {
-          uid: EntriyUid,
-          content_type: template,
-          version: 1,
-          locale: "en-us",
-        },
-      ],
-      locales: ["en-us"],
-      environments: ["dev"],
-      publish_with_reference: true,
-      skip_workflow_stage_check: true,
-    });
-
-    const requestOptions: RequestInit = {
-      method: "POST",
-      headers: myHeaders,
-      body: data,
-    };
-
-    const response = await fetch(
-      `https://api.contentstack.io/v3/bulk/publish?x-bulk-action=publish`,
-      requestOptions
-    );
-
-    const publishingResult = await response.json();
   };
 
   const renderResult = () => {
@@ -599,15 +513,15 @@ export default function GenerateContent() {
                             <option value="">Choose...</option>
                             {field?.enum?.choices?.map(
                               (ele: any, ind: number) => (
-                                  <option key={ind} value={ele?.value}>
-                                    {ele?.value}
-                                  </option>
-                                )
+                                <option key={ind} value={ele?.value}>
+                                  {ele?.value}
+                                </option>
+                              )
                             )}
                           </select>
                         </div>
                       );
-                    }else if (field?.data_type === "text") {
+                    } else if (field?.data_type === "text") {
                       return (
                         <div
                           key={field?.uid ?? parentUid}
@@ -653,6 +567,7 @@ export default function GenerateContent() {
                             setSelectedAssetData={(asset: Asset) =>
                               getAssetFromPicker(field?.uid, asset)
                             }
+                            jwt={jwt}
                           />
 
                           {/* Hidden input to hold the selected asset URL */}
@@ -807,7 +722,14 @@ export default function GenerateContent() {
                   />
                 </svg>
               </h1>
-              <Settings model={aiModel} setAIModel={getAIModel} />
+              <Settings
+                model={aiModel}
+                setAIModel={getAIModel}
+                prompt={customPrompt}
+                setPrompt={setCustomPrompt}
+                brandWebsite={brandWebsite}
+                setBrandWebsite={setBrandWebsite}
+              />
             </div>
           </div>
         </div>
@@ -1012,7 +934,7 @@ export default function GenerateContent() {
               <h2>Select Content Types</h2>
             </div>
             <div className="p-4 border-[var(--border-color)] border-l-[1px] border-r-[1px]">
-              {contentTypeResult?.content_types?.map(
+              {contentTypeResult?.map(
                 (field: { options: any; title: string; uid: string }) =>
                   field.options.is_page && (
                     <div className="form-check" key={field.uid}>

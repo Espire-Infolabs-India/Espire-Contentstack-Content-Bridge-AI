@@ -1,19 +1,37 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
+import axios from "axios";
+import { verifyJwt } from "../../helper/jwt";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const api_key = Array.isArray(req.headers.api_key)
-    ? (req.headers.api_key[0] as string)
-    : (req.headers.api_key as string);
-  const authorization = Array.isArray(req.headers.authorization)
-    ? (req.headers.authorization[0] as string)
-    : (req.headers.authorization as string);
-  // const response = await fetch("https://api.contentstack.io/v3/assets?include_folders=true&sort=created_at&asc=true&limit=500&skip=0", {
-  const response = await fetch("https://api.contentstack.io/v3/assets?include_folders=true&sort=created_at", {
-    headers: { api_key, authorization },
-  });
-  const data = await response.json();
-  res.status(response.status).json(data);
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const stack = verifyJwt(token);
+
+    if (!stack?.apiKey || !stack?.cmaToken) {
+      return res.status(400).json({ error: "Missing stack info in JWT" });
+    }
+
+    // ✅ Call Contentstack Assets API
+    const url =
+      "https://api.contentstack.io/v3/assets?include_folders=true&sort=created_at";
+    const response = await axios.get(url, {
+      headers: {
+        api_key: stack.apiKey,
+        authorization: stack.cmaToken,
+      },
+    });
+
+    res.status(200).json(response.data);
+  } catch (err: any) {
+    console.error("❌ Error in get-assets API:", err.message);
+    res.status(500).json({ error: "Failed to fetch assets" });
+  }
 }

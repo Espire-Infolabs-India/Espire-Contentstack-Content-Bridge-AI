@@ -1,68 +1,77 @@
-import ContentstackLivePreview from "@contentstack/live-preview-utils";
-import getConfig from "next/config";
-import {
-  customHostUrl,
-  initializeContentStackSdk,
-  isValidCustomHostUrl,
-} from "./utils";
-
-type GetEntry = {
-  contentTypeUid: string;
-  referenceFieldPath: string[] | undefined;
-  jsonRtePath: string[] | undefined;
-};
-
-type GetEntryByUrl = {
-  entryUrl: string | undefined;
-  contentTypeUid: string;
-  referenceFieldPath: string[] | undefined;
-  jsonRtePath: string[] | undefined;
-};
-
-const { publicRuntimeConfig } = getConfig();
-const envConfig = process.env.CONTENTSTACK_API_KEY
-  ? process.env
-  : publicRuntimeConfig;
-
-let customHostBaseUrl = envConfig.CONTENTSTACK_API_HOST as string;
-customHostBaseUrl = customHostBaseUrl ? customHostUrl(customHostBaseUrl) : "";
-
-// SDK initialization
-const Stack = initializeContentStackSdk();
-
-// set host url only for custom host or non prod base url's
-if (customHostBaseUrl && isValidCustomHostUrl(customHostBaseUrl)) {
-  Stack.setHost(customHostBaseUrl);
+// contentstack-api.ts
+export interface ContentstackConfig {
+  apiKey: string; // Delivery/API key
+  deliveryToken: string; // Delivery token
+  cmaToken?: string; // CMA token for management API
+  environment: string; // environment name (e.g., "staging" or "production")
 }
 
-// Setting LP if enabled
-ContentstackLivePreview.init({
-  //@ts-ignore
-  stackSdk: Stack,
-  clientUrlParams: {
-    host: envConfig.CONTENTSTACK_APP_HOST,
-  },
-  ssr: false,
-})?.catch((err) => console.error(err));
+// Fetch a single entry dynamically using config
+export async function getEntry({
+  contentTypeUid,
+  entryUid,
+  config,
+}: {
+  contentTypeUid: string;
+  entryUid: string;
+  config: ContentstackConfig;
+}) {
+  const url = `https://cdn.contentstack.io/v3/content_types/${contentTypeUid}/entries/${entryUid}?environment=${config.environment}`;
+  const response = await fetch(url, {
+    headers: {
+      api_key: config.apiKey,
+      access_token: config.deliveryToken,
+    },
+  });
 
-export const { onEntryChange } = ContentstackLivePreview;
+  if (!response.ok) {
+    throw new Error(`Error fetching entry: ${response.statusText}`);
+  }
 
-const renderOption = {
-  span: (node: any, next: any) => next(node.children),
-};
+  const data = await response.json();
+  return data.entry;
+}
 
-export async function resolveNestedEntry(entry: any): Promise<any> {
+// Fetch all content types dynamically using config
+export async function getContentTypes({
+  includeGlobalFieldSchema = true,
+  config,
+}: {
+  includeGlobalFieldSchema?: boolean;
+  config: ContentstackConfig;
+}) {
+  const url = `https://api.contentstack.io/v3/content_types/?include_global_field_schema=${includeGlobalFieldSchema}`;
+  const response = await fetch(url, {
+    headers: {
+      api_key: config.apiKey,
+      authorization: config.cmaToken || "", // CMA token required for management API
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching content types: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.content_types;
+}
+
+// Recursively resolve nested entries using the dynamic config
+export async function resolveNestedEntry(
+  entry: any,
+  config: ContentstackConfig
+): Promise<any> {
   async function resolveDeep(obj: any): Promise<any> {
-    if (Array.isArray(obj)) {
-      return Promise.all(obj.map(resolveDeep));
-    }
+    if (Array.isArray(obj)) return Promise.all(obj.map(resolveDeep));
+
     if (obj && typeof obj === "object") {
       if (obj.uid && obj._content_type_uid) {
         try {
-          const resolved = await Stack.ContentType(obj._content_type_uid)
-            .Entry(obj.uid)
-            .toJSON()
-            .fetch();
+          const resolved = await getEntry({
+            contentTypeUid: obj._content_type_uid,
+            entryUid: obj.uid,
+            config,
+          });
           return resolveDeep(resolved);
         } catch (err) {
           console.error(
@@ -72,43 +81,38 @@ export async function resolveNestedEntry(entry: any): Promise<any> {
           return obj;
         }
       }
+
       const resolvedObj: any = {};
       for (const key of Object.keys(obj)) {
         resolvedObj[key] = await resolveDeep(obj[key]);
       }
       return resolvedObj;
     }
+
     return obj;
   }
-  return await resolveDeep(entry);
+
+  return resolveDeep(entry);
 }
 
-export async function getAllContentTypes() {
+// Fetch a content type and resolve nested entries dynamically
+export async function getContentType(
+  contentType: string,
+  config: ContentstackConfig
+) {
   try {
-    const contentTypes = await Stack.getContentTypes({
-      include_global_field_schema: true,
+    const content_types = await getContentTypes({
+      includeGlobalFieldSchema: true,
+      config,
     });
-
-    return contentTypes;
-  } catch (err) {
-    console.error("❌ Error fetching entries:", err);
-    return [];
-  }
-}
-
-export async function getContentType(contentType: string) {
-  try {
-    const { content_types } = await Stack.getContentTypes({
-      include_global_field_schema: true,
-    });
-
     const pageContentTypes = content_types.filter(
-      (ct: any) => ct.uid == contentType
+      (ct: any) => ct.uid === contentType
     );
 
     const resolvedEntries = await Promise.all(
-      pageContentTypes.map((entry) => resolveNestedEntry(entry))
+      pageContentTypes.map((entry: any) => resolveNestedEntry(entry, config))
     );
+
     return resolvedEntries;
   } catch (err) {
     console.error("❌ Error fetching entries:", err);
